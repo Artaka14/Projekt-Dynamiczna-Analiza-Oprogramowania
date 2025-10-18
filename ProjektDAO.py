@@ -4,6 +4,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter
 import pandas as pd
 from datetime import datetime
+from PIL import Image
 
 def get_cdp_data(period):
     if period in ["1d", "7d"]:
@@ -60,6 +61,35 @@ def create_cdp_plot(frame, period):
     canvas.get_tk_widget().pack(fill="both", expand=True)
 
 
+class SplashScreen(customtkinter.CTk):
+    def __init__(self):
+        super().__init__()
+        self.title("Ekran startowy")
+        #ten caly shit zeby byl na srodku splashor
+        width, height = 400, 250
+        self.geometry(f"{width}x{height}+{self.center_x(width)}+{self.center_y(height)}")
+        self.resizable(False, False)
+        self.overrideredirect(True)  # borderless
+
+        self.logo = customtkinter.CTkImage(light_image=Image.open("XDlogo.png"), size=(400, 250))
+        customtkinter.CTkLabel(self, image=self.logo, text="").pack(pady=10)       
+
+        # po 2,5 sekundy opening
+        self.after(2500, self.open_main_app)
+
+    def center_x(self, window_width):
+        screen_width = self.winfo_screenwidth()
+        return int((screen_width / 2) - (window_width / 2))
+
+    def center_y(self, window_height):
+        screen_height = self.winfo_screenheight()
+        return int((screen_height / 2) - (window_height / 2))
+
+    def open_main_app(self):
+        self.destroy()
+        app = App()
+        app.mainloop()
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -96,5 +126,6 @@ class App(customtkinter.CTk):
 
 
 if __name__ == "__main__":
-    app = App()
-    app.mainloop()
+    start = SplashScreen()
+    start.mainloop()
+
