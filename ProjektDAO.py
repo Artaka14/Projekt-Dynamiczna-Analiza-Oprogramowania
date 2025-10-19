@@ -5,7 +5,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter
 import pandas as pd
 
-def get_cdp_data(period):
+#Funkcja, która zdobywa informacje o kursie CDPu do wykresu
+def getCdpData(period): 
     end_time = datetime.now()
 
     if end_time.weekday() >= 5: 
@@ -46,9 +47,9 @@ def get_cdp_data(period):
 
     return data_reset
 
-
-def create_cdp_plot(frame, period):
-    data_reset = get_cdp_data(period)
+#Funkcja tworząca wykres
+def createCdpPlot(frame, period):
+    data_reset = getCdpData(period)
 
     if period == "1d":
         periodName = "1 dzień"
@@ -96,9 +97,8 @@ def create_cdp_plot(frame, period):
     canvas.draw()
     canvas.get_tk_widget().pack(fill="both", expand=True)
 
-
-def get_current_price():
-    """Pobiera bieżącą cenę akcji CD Projekt S.A."""
+#Funkcja, która pobiera informacje o kursie
+def getCurrentPrice():
     ticker = yf.Ticker("CDR.WA")
     data = ticker.history(period="1d", interval="1m")
     if not data.empty:
@@ -110,7 +110,7 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.geometry("1920x1080")
-        self.title("CD Projekt S.A. — Notowania")
+        self.title("CD Projekt SA")
 
         self.main_frame = customtkinter.CTkFrame(self)
         self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
@@ -147,28 +147,21 @@ class App(customtkinter.CTk):
                 button_frame,
                 text=period,
                 width=70,
-                command=lambda p=period: self.show_plot(p)
+                command=lambda p=period: self.showPlot(p)
             )
             btn.pack(side="left", padx=5)
-        create_cdp_plot(self.plot_frame, "7d")
-        self.update_price_label()
+        createCdpPlot(self.plot_frame, "7d")
+        self.updatePriceLabel()
 
 
-    def show_plot(self, period):
+    def showPlot(self, period):
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
-        create_cdp_plot(self.plot_frame, period)
+        createCdpPlot(self.plot_frame, period)
         self.state("zoomed")
 
-    def update_price_label(self):
-        try:
-            price = get_current_price()
-            if price:
-                self.price_label_value.configure(text=f"{price} PLN")
-            else:
-                self.price_label_value.configure(text="Brak danych")
-        except Exception:
-            self.price_label_value.configure(text="Błąd pobierania")
+    def updatePriceLabel(self):
+        self.price_label_value.configure(text=f"{price} PLN")
         self.state("zoomed")
 
 app = App()
