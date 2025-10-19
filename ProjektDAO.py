@@ -109,7 +109,7 @@ class App(customtkinter.CTk):
         self.price_label_title.pack()
 
         self.price_label_value = customtkinter.CTkLabel(
-            self.price_frame, text="Pobieranie...", font=("Arial", 16)
+            self.price_frame, text="...", font=("Arial", 16)
         )
         self.price_label_value.pack(pady=(5, 0))
 
@@ -146,3 +146,4 @@ class App(customtkinter.CTk):
 
 app = App()
 app.mainloop()
+
