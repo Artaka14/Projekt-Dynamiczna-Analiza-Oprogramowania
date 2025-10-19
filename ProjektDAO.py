@@ -19,10 +19,10 @@ def get_cdp_data(period):
     elif period == "7d":
         start_time = end_time - timedelta(days=7)
         interval = "5m"
-    elif period == "1mo":
+    elif period == "1m":
         start_time = end_time - timedelta(days=30)
         interval = "15m"
-    elif period == "1y":
+    elif period == "1r":
         start_time = end_time - timedelta(days=365)
         interval = "1d"
     else:
@@ -38,11 +38,6 @@ def get_cdp_data(period):
 
     if data.empty:
         raise ValueError("Brak danych dla wybranego okresu.")
-
-    if data.index.tz is None:
-        data.index = data.index.tz_localize('Europe/Warsaw')
-    else:
-        data.index = data.index.tz_convert('Europe/Warsaw')
 
     data = data.between_time("09:00", "17:00")
     data = data[data.index.dayofweek < 5]
@@ -60,25 +55,40 @@ def create_cdp_plot(frame, period):
         periodName = "1 dzień"
     elif period == "7d":
         periodName = "7 dni"
-    elif period == "1mo":
+    elif period == "1m":
         periodName = "1 miesiąc"
-    elif period == "1y":
+        period = "1mo"
+    elif period == "1r":
         periodName = "1 rok"
+        period = "1y"
 
     fig, ax = plt.subplots(figsize=(8, 4))
+
     ax.plot(data_reset["sample_index"], data_reset["Close"], label="CD Projekt S.A.")
     ax.set_title(f"CD Projekt S.A. — okres: {periodName}")
     ax.set_ylabel("Cena (PLN)")
+    ticks = []
 
     if "Datetime" in data_reset.columns:
         try:
-            session_ends = (
-                data_reset.groupby(data_reset["Datetime"].dt.date)["sample_index"].max()
-            )
-            ax.set_xticks(session_ends.values)
-            ax.set_xticklabels([str(d) for d in session_ends.index], rotation=45)
+            session_bounds = data_reset.groupby(data_reset["Datetime"].dt.date)["sample_index"].agg(['min', 'max'])
+
+            ticks = session_bounds['min'].tolist()
+            labels = [str(d) for d in session_bounds.index]
+
+            ticks.append(session_bounds['max'].iloc[-1])
+            labels.append(str(session_bounds.index[-1]+timedelta(days=1)))
+
+            ax.set_xticks(ticks)
+            ax.set_xticklabels(labels, rotation=45)
+
+            ylim = ax.get_ylim()
+
+            ax.set_xlim(data_reset['sample_index'].min(), data_reset['sample_index'].max())
+
         except Exception:
             pass
+
 
     ax.grid(True)
     plt.tight_layout()
@@ -125,8 +135,6 @@ class App(customtkinter.CTk):
         )
         self.price_label_value.pack(pady=(5, 0))
 
-        self.update_price_label()
-
         label = customtkinter.CTkLabel(
             self.right_frame, text="Zakres danych", font=("Arial", 14, "bold")
         )
@@ -135,7 +143,7 @@ class App(customtkinter.CTk):
         button_frame = customtkinter.CTkFrame(self.right_frame)
         button_frame.pack(pady=10)
 
-        for period in ["1d", "7d", "1mo"]:
+        for period in ["1d", "7d", "1m"]:
             btn = customtkinter.CTkButton(
                 button_frame,
                 text=period,
@@ -144,12 +152,13 @@ class App(customtkinter.CTk):
             )
             btn.pack(side="left", padx=5)
         create_cdp_plot(self.plot_frame, "7d")
+        self.update_price_label()
+
 
     def show_plot(self, period):
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
         create_cdp_plot(self.plot_frame, period)
-        self.update_price_label()
         self.state("zoomed")
 
     def update_price_label(self):
@@ -161,6 +170,7 @@ class App(customtkinter.CTk):
                 self.price_label_value.configure(text="Brak danych")
         except Exception:
             self.price_label_value.configure(text="Błąd pobierania")
+        self.state("zoomed")
 
 
 if __name__ == "__main__":
