@@ -25,22 +25,11 @@ def getCdpData(period):
     elif period == "1r":
         start_time = end_time - timedelta(days=365)
         interval = "1d"
-    else:
-        raise ValueError("Nieznany okres czasu.")
 
-    data = yf.download(
-        "CDR.WA",
-        start=start_time,
-        end=end_time,
-        interval=interval,
-        progress=False
-    )
+    data = yf.download("CDR.WA", start=start_time, end=end_time, interval=interval, progress=False)
 
     if data.empty:
         raise ValueError("Brak danych dla wybranego okresu.")
-
-    data = data.between_time("09:00", "17:00")
-    data = data[data.index.dayofweek < 5]
 
     data_reset = data.reset_index(drop=False)
     data_reset["sample_index"] = range(len(data_reset))
@@ -67,28 +56,18 @@ def createCdpPlot(frame, period):
     ax.plot(data_reset["sample_index"], data_reset["Close"], label="CD Projekt S.A.")
     ax.set_title(f"CD Projekt S.A. — okres: {periodName}")
     ax.set_ylabel("Cena (PLN)")
-    ticks = []
 
-    if "Datetime" in data_reset.columns:
-        try:
-            session_bounds = data_reset.groupby(data_reset["Datetime"].dt.date)["sample_index"].agg(['min', 'max'])
+    session_bounds = data_reset.groupby(data_reset["Datetime"].dt.date)["sample_index"].agg(['min', 'max'])
 
-            ticks = session_bounds['min'].tolist()
-            labels = [str(d) for d in session_bounds.index]
+    ticks = session_bounds['min'].tolist()
+    labels = [str(d) for d in session_bounds.index]
+    ticks.append(session_bounds['max'].iloc[-1])
+    labels.append(str(session_bounds.index[-1]+timedelta(days=1)))
 
-            ticks.append(session_bounds['max'].iloc[-1])
-            labels.append(str(session_bounds.index[-1]+timedelta(days=1)))
+    ax.set_xticks(ticks)
+    ax.set_xticklabels(labels, rotation=45)
 
-            ax.set_xticks(ticks)
-            ax.set_xticklabels(labels, rotation=45)
-
-            ylim = ax.get_ylim()
-
-            ax.set_xlim(data_reset['sample_index'].min(), data_reset['sample_index'].max())
-
-        except Exception:
-            pass
-
+    ax.set_xlim(data_reset['sample_index'].min(), data_reset['sample_index'].max())
 
     ax.grid(True)
     plt.tight_layout()
@@ -161,9 +140,9 @@ class App(customtkinter.CTk):
         self.state("zoomed")
 
     def updatePriceLabel(self):
+        price = getCurrentPrice()
         self.price_label_value.configure(text=f"{price} PLN")
         self.state("zoomed")
 
 app = App()
 app.mainloop()
-
