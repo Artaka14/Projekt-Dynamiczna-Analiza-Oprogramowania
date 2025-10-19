@@ -112,7 +112,6 @@ class App(customtkinter.CTk):
         self.right_frame = customtkinter.CTkFrame(self.main_frame)
         self.right_frame.pack(side="right", fill="y", padx=(10, 0), pady=10)
 
-        # --- Ramka z aktualną ceną ---
         self.price_frame = customtkinter.CTkFrame(self.right_frame)
         self.price_frame.pack(pady=(10, 20))
 
@@ -128,7 +127,6 @@ class App(customtkinter.CTk):
 
         self.update_price_label()
 
-        # --- Ramka z przyciskami ---
         label = customtkinter.CTkLabel(
             self.right_frame, text="Zakres danych", font=("Arial", 14, "bold")
         )
@@ -155,7 +153,6 @@ class App(customtkinter.CTk):
         self.state("zoomed")
 
     def update_price_label(self):
-        """Aktualizuje etykietę z bieżącą ceną akcji"""
         try:
             price = get_current_price()
             if price:
