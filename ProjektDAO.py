@@ -4,10 +4,9 @@ from datetime import datetime, timedelta
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter
 import pandas as pd
-from zoneinfo import ZoneInfo
 
 def get_cdp_data(period):
-    end_time = datetime.now(ZoneInfo("Europe/Warsaw"))
+    end_time = datetime.now()
 
     if end_time.weekday() >= 5: 
        days_to_subtract = end_time.weekday() - 4 
@@ -172,7 +171,6 @@ class App(customtkinter.CTk):
             self.price_label_value.configure(text="Błąd pobierania")
         self.state("zoomed")
 
+app = App()
+app.mainloop()
 
-if __name__ == "__main__":
-    app = App()
-    app.mainloop()
