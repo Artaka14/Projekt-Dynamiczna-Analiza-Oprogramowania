@@ -1,19 +1,40 @@
 import yfinance as yf
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter
 import pandas as pd
-from datetime import datetime
+from zoneinfo import ZoneInfo
 
 def get_cdp_data(period):
-    if period in ["1d", "7d"]:
-        interval = "1m"
-    elif period in ["1mo"]:
-        interval = "15m"
-    else:
-        interval = "60m"
+    end_time = datetime.now(ZoneInfo("Europe/Warsaw"))
 
-    data = yf.download("CDR.WA", period=period, interval=interval, progress=False)
+    if end_time.weekday() >= 5: 
+       days_to_subtract = end_time.weekday() - 4 
+       end_time -= timedelta(days=days_to_subtract)
+
+    if period == "1d":
+        start_time = end_time - timedelta(days=1)
+        interval = "1m"
+    elif period == "7d":
+        start_time = end_time - timedelta(days=7)
+        interval = "5m"
+    elif period == "1mo":
+        start_time = end_time - timedelta(days=30)
+        interval = "15m"
+    elif period == "1y":
+        start_time = end_time - timedelta(days=365)
+        interval = "1d"
+    else:
+        raise ValueError("Nieznany okres czasu.")
+
+    data = yf.download(
+        "CDR.WA",
+        start=start_time,
+        end=end_time,
+        interval=interval,
+        progress=False
+    )
 
     if data.empty:
         raise ValueError("Brak danych dla wybranego okresu.")
@@ -35,12 +56,19 @@ def get_cdp_data(period):
 def create_cdp_plot(frame, period):
     data_reset = get_cdp_data(period)
 
+    if period == "1d":
+        periodName = "1 dzień"
+    elif period == "7d":
+        periodName = "7 dni"
+    elif period == "1mo":
+        periodName = "1 miesiąc"
+    elif period == "1y":
+        periodName = "1 rok"
+
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.plot(data_reset["sample_index"], data_reset["Close"], label="CD Projekt S.A.")
-    ax.set_title(f"CD Projekt S.A. — okres: {period}")
-    ax.set_xlabel("Numer próbki (kolejny punkt notowań)")
+    ax.set_title(f"CD Projekt S.A. — okres: {periodName}")
     ax.set_ylabel("Cena (PLN)")
-    ax.legend()
 
     if "Datetime" in data_reset.columns:
         try:
@@ -60,10 +88,19 @@ def create_cdp_plot(frame, period):
     canvas.get_tk_widget().pack(fill="both", expand=True)
 
 
+def get_current_price():
+    """Pobiera bieżącą cenę akcji CD Projekt S.A."""
+    ticker = yf.Ticker("CDR.WA")
+    data = ticker.history(period="1d", interval="1m")
+    if not data.empty:
+        return round(data["Close"].iloc[-1], 2)
+    return None
+
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-        self.geometry("1100x600")
+        self.geometry("1920x1080")
         self.title("CD Projekt S.A. — Notowania")
 
         self.main_frame = customtkinter.CTkFrame(self)
@@ -75,24 +112,58 @@ class App(customtkinter.CTk):
         self.right_frame = customtkinter.CTkFrame(self.main_frame)
         self.right_frame.pack(side="right", fill="y", padx=(10, 0), pady=10)
 
-        label = customtkinter.CTkLabel(self.right_frame, text="Zakres danych", font=("Arial", 14, "bold"))
-        label.pack(pady=(10, 20))
+        # --- Ramka z aktualną ceną ---
+        self.price_frame = customtkinter.CTkFrame(self.right_frame)
+        self.price_frame.pack(pady=(10, 20))
 
-        for period in ["1d", "7d", "1mo", "1y"]:
+        self.price_label_title = customtkinter.CTkLabel(
+            self.price_frame, text="Aktualna cena:", font=("Arial", 14, "bold")
+        )
+        self.price_label_title.pack()
+
+        self.price_label_value = customtkinter.CTkLabel(
+            self.price_frame, text="Pobieranie...", font=("Arial", 16)
+        )
+        self.price_label_value.pack(pady=(5, 0))
+
+        self.update_price_label()
+
+        # --- Ramka z przyciskami ---
+        label = customtkinter.CTkLabel(
+            self.right_frame, text="Zakres danych", font=("Arial", 14, "bold")
+        )
+        label.pack(pady=(0, 10))
+
+        button_frame = customtkinter.CTkFrame(self.right_frame)
+        button_frame.pack(pady=10)
+
+        for period in ["1d", "7d", "1mo"]:
             btn = customtkinter.CTkButton(
-                self.right_frame, 
+                button_frame,
                 text=period,
+                width=70,
                 command=lambda p=period: self.show_plot(p)
             )
-            btn.pack(pady=10, padx=10)
-
+            btn.pack(side="left", padx=5)
         create_cdp_plot(self.plot_frame, "7d")
 
     def show_plot(self, period):
-      for widget in self.plot_frame.winfo_children():
+        for widget in self.plot_frame.winfo_children():
             widget.destroy()
+        create_cdp_plot(self.plot_frame, period)
+        self.update_price_label()
+        self.state("zoomed")
 
-      create_cdp_plot(self.plot_frame, period)
+    def update_price_label(self):
+        """Aktualizuje etykietę z bieżącą ceną akcji"""
+        try:
+            price = get_current_price()
+            if price:
+                self.price_label_value.configure(text=f"{price} PLN")
+            else:
+                self.price_label_value.configure(text="Brak danych")
+        except Exception:
+            self.price_label_value.configure(text="Błąd pobierania")
 
 
 if __name__ == "__main__":
