@@ -1,6 +1,7 @@
 import time
 import customtkinter
 import threading
+import main
 import CDPplot
 from PIL import Image
 
@@ -45,5 +46,5 @@ class SplashScreen(customtkinter.CTk):
 
     def open_main_app(self, data):
         self.destroy()
-        app = App(preloaded_data=data)
+        app = main.App(preloaded_data=data)
         app.mainloop()
