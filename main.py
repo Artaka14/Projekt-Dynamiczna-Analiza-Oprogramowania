@@ -1,7 +1,5 @@
 import customtkinter
 import time
-import threading
-from PIL import Image
 import CDPplot
 import CDPprice
 import Splash
@@ -68,7 +66,8 @@ class App(customtkinter.CTk):
         self.state("zoomed")
 
 if __name__ == "__main__":
-   start = SplashScreen()
+   start = Splash.SplashScreen()
    start.mainloop()
+
 
 
