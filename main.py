@@ -1,9 +1,3 @@
-import customtkinter
-import time
-import CDPplot
-import CDPprice
-import Splash
-
 class App(customtkinter.CTk):
     def __init__(self, preloaded_data=None):
         super().__init__()
@@ -22,19 +16,37 @@ class App(customtkinter.CTk):
         self.price_frame = customtkinter.CTkFrame(self.right_frame)
         self.price_frame.pack(pady=(10, 20))
 
-        self.price_label_title = customtkinter.CTkLabel(
-            self.price_frame, text="Aktualna cena:", font=("Arial", 14, "bold")
-        )
+        self.price_label_title = customtkinter.CTkLabel(self.price_frame, text="Aktualna cena:", font=("Arial", 14, "bold"))
         self.price_label_title.pack()
 
-        self.price_label_value = customtkinter.CTkLabel(
-            self.price_frame, text="...", font=("Arial", 16)
-        )
+        self.price_label_value = customtkinter.CTkLabel(self.price_frame, text="...", font=("Arial", 16))
         self.price_label_value.pack(pady=(5, 0))
 
-        label = customtkinter.CTkLabel(
-            self.right_frame, text="Zakres danych", font=("Arial", 14, "bold")
-        )
+        self.minmax_frame = customtkinter.CTkFrame(self.right_frame)
+        self.minmax_frame.pack(pady=(10, 20))
+
+        self.minmax_values_frame = customtkinter.CTkFrame(self.minmax_frame)
+        self.minmax_values_frame.pack()
+
+        self.min_frame = customtkinter.CTkFrame(self.minmax_values_frame)
+        self.min_frame.pack(side="left", padx=20)
+
+        self.min_label_title = customtkinter.CTkLabel(self.min_frame, text="Min", font=("Arial", 14, "bold"))
+        self.min_label_title.pack()
+
+        self.min_label_value = customtkinter.CTkLabel(self.min_frame, text="...", font=("Arial", 16))
+        self.min_label_value.pack(pady=(5, 0))
+
+        self.max_frame = customtkinter.CTkFrame(self.minmax_values_frame)
+        self.max_frame.pack(side="left", padx=20)
+
+        self.max_label_title = customtkinter.CTkLabel(self.max_frame, text="Max", font=("Arial", 14, "bold"))
+        self.max_label_title.pack()
+
+        self.max_label_value = customtkinter.CTkLabel(self.max_frame, text="...", font=("Arial", 16))
+        self.max_label_value.pack(pady=(5, 0))
+
+        label = customtkinter.CTkLabel(self.right_frame, text="Zakres danych", font=("Arial", 14, "bold"))
         label.pack(pady=(0, 10))
 
         button_frame = customtkinter.CTkFrame(self.right_frame)
@@ -51,23 +63,30 @@ class App(customtkinter.CTk):
             
          # Jak sa dane pobrane w splash to uzywane
         if preloaded_data is not None:
-             CDPplot.createCdpPlot(self.plot_frame, "7d")  
-        self.updatePriceLabel()
+             self.showPlot("7d") 
 
     def showPlot(self, period):
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
-        CDPplot.createCdpPlot(self.plot_frame, period)
+        data = CDPplot.getCdpData(period)
+        CDPplot.createCdpPlot(self.plot_frame, period, data)
+        self.updatePriceLabel()
+        self.updateMinMaxLabels(data, period)
         self.state("zoomed")
 
     def updatePriceLabel(self):
         price = CDPprice.getCurrentPrice()
         self.price_label_value.configure(text=f"{price} PLN")
-        self.state("zoomed")
+
+    def updateMinMaxLabels(self, data, period):
+        min_price, max_price = CDPprice.getMinMaxPrice(data, period)
+        self.min_label_value.configure(text=f"{min_price} PLN")
+        self.max_label_value.configure(text=f"{max_price} PLN")
 
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
 
