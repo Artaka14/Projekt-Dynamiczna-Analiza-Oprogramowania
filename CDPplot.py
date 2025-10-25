@@ -1,5 +1,6 @@
-﻿import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import yfinance as yf
+import main
 from datetime import datetime, timedelta
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -26,15 +27,13 @@ def getCdpData(period):
     if data.empty:
         raise ValueError("Brak danych dla wybranego okresu.")
 
-    data_reset = data.reset_index(drop=False)
-    data_reset["sample_index"] = range(len(data_reset))
+    data = data.reset_index(drop=False)
+    data["sample_index"] = range(len(data))
 
-    return data_reset
+    return data
 
 #Funkcja tworząca wykres
-def createCdpPlot(frame, period):
-    data_reset = getCdpData(period)
-
+def createCdpPlot(frame, period, data):
     if period == "1d":
        periodName = "1 dzień"
     elif period == "7d":
@@ -45,11 +44,11 @@ def createCdpPlot(frame, period):
 
     fig, ax = plt.subplots(figsize=(8, 4))
 
-    ax.plot(data_reset["sample_index"], data_reset["Close"], label="CD Projekt S.A.")
+    ax.plot(data["sample_index"], data["Close"], label="CD Projekt S.A.")
     ax.set_title(f"CD Projekt S.A. — okres: {periodName}")
     ax.set_ylabel("Cena (PLN)")
 
-    session_bounds = data_reset.groupby(data_reset["Datetime"].dt.date)["sample_index"].agg(['min', 'max'])
+    session_bounds = data.groupby(data["Datetime"].dt.date)["sample_index"].agg(['min', 'max'])
 
     ticks = session_bounds['min'].tolist()
     labels = [str(d) for d in session_bounds.index]
@@ -59,11 +58,16 @@ def createCdpPlot(frame, period):
     ax.set_xticks(ticks)
     ax.set_xticklabels(labels, rotation=45)
 
-    ax.set_xlim(data_reset['sample_index'].min(), data_reset['sample_index'].max())
+    ax.set_xlim(data['sample_index'].min(), data['sample_index'].max())
 
     ax.grid(True)
     plt.tight_layout()
 
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.draw()
+    canvas.get_tk_widget().pack(fill="both", expand=True)
+
+    canvas = FigureCanvasTkAgg(fig, master=frame)
+    canvas.draw()
+
     canvas.get_tk_widget().pack(fill="both", expand=True)
