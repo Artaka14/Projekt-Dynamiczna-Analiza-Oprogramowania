@@ -1,3 +1,8 @@
+import time
+import customtkinter
+import threading
+from PIL import Image
+
 class SplashScreen(customtkinter.CTk):
     def __init__(self):
         super().__init__()
