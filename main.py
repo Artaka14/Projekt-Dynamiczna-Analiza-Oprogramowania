@@ -1,3 +1,8 @@
+import customtkinter
+import CDPplot
+import CDPdata
+import Splash
+
 class App(customtkinter.CTk):
     def __init__(self, preloaded_data=None):
         super().__init__()
@@ -86,6 +91,7 @@ class App(customtkinter.CTk):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
 
