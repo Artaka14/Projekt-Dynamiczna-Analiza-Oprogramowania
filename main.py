@@ -2,6 +2,7 @@ import customtkinter
 import CDPplot
 import CDPdata
 import Splash
+from tkcalendar import DateEntry
 
 class App(customtkinter.CTk):
     def __init__(self, preloaded_data=None):
@@ -66,6 +67,21 @@ class App(customtkinter.CTk):
             )
             btn.pack(side="left", padx=5)
             
+        customtkinter.CTkLabel(self.date_picker_frame, text="Własny zakres danych", font=("Arial", 14, "bold")).pack(pady=(0, 10))
+
+        self.date_inputs_frame = customtkinter.CTkFrame(self.date_picker_frame)
+        self.date_inputs_frame.pack()
+
+        customtkinter.CTkLabel(self.date_inputs_frame, text="Od:").pack(side="left", padx=5)
+        self.start_date_entry = DateEntry(self.date_inputs_frame, width=10, date_pattern="yyyy-mm-dd")
+        self.start_date_entry.pack(side="left", padx=5)
+
+        customtkinter.CTkLabel(self.date_inputs_frame, text="Do:").pack(side="left", padx=5)
+        self.end_date_entry = DateEntry(self.date_inputs_frame, width=10, date_pattern="yyyy-mm-dd")
+        self.end_date_entry.pack(side="left", padx=5)
+
+        self.custom_date_button = customtkinter.CTkButton(self.date_picker_frame, text="Pokaż wykres", command=self.showCustomDatePlot)
+        self.custom_date_button.pack(pady=10)  
          # Jak sa dane pobrane w splash to uzywane
         if preloaded_data is not None:
              self.showPlot("7d") 
@@ -79,12 +95,14 @@ class App(customtkinter.CTk):
         self.updateMinMaxLabels(data)
         self.state("zoomed")
         
-    def showCustomDatePlot(self):
+        def showCustomDatePlot(self):
         start_date = self.start_date_entry.get_date()
         end_date = self.end_date_entry.get_date()
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
-        CDPplot.createCustomDataCdpPlot(self.plot_frame, start_date, end_date)
+        data = CDPdata.getCustomCdpData(start_date, end_date)
+        CDPplot.createCustomDataCdpPlot(self.plot_frame, start_date, end_date, data)
+        self.updateMinMaxLabels(data)
         
     def updatePriceLabel(self):
         price = CDPdata.getCurrentPrice()
@@ -98,6 +116,7 @@ class App(customtkinter.CTk):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
 
