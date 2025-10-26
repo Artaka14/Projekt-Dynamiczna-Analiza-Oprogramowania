@@ -74,7 +74,7 @@ def createCdpPlot(frame, period, data):
 
     canvas.get_tk_widget().pack(fill="both", expand=True)
 
-def createCustomDataCdpPlot(frame, start_date, end_date):
+def createCustomDataCdpPlot(frame, start_date, end_date, data):
         today = datetime.now().date()
 
         if start_date > end_date:
@@ -92,8 +92,7 @@ def createCustomDataCdpPlot(frame, start_date, end_date):
                 icon="warning"
             )
             return
-
-        data = CDPdata.getCustomCdpData(start_date, end_date)
+            
         if data.empty:
            raise ValueError("Brak danych dla wybranego zakresu.")
 
@@ -117,3 +116,4 @@ def createCustomDataCdpPlot(frame, start_date, end_date):
         canvas = FigureCanvasTkAgg(fig, master=frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True)
+
