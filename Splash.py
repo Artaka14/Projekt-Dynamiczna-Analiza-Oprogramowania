@@ -33,7 +33,7 @@ class SplashScreen(customtkinter.CTk):
     def load_data_with_delay(self):
         start_time = time.time()
         try:
-            data = CDPplot.getCdpData("7d")
+            data = CDPdata.getCdpData("7d")
         except Exception as e:
             print("Błąd pobierania danych:", e)
             data = None
