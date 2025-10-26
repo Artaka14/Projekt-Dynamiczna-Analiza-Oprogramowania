@@ -55,10 +55,11 @@ def getCurrentPrice():
     return None
 
 #Funkcja szukająca minimalnej i maksymalnej wartości 
-def getMinMaxPrice(data=None, period="7d"):
+def getMinMaxPrice(data=None):
     min_price = round(float(data["Close"].min()), 2)
     max_price = round(float(data["Close"].max()), 2)
     return min_price, max_price
+
 
 
 
