@@ -2,7 +2,7 @@ import time
 import customtkinter
 import threading
 import main
-import CDPplot
+import CDPdata
 from PIL import Image
 
 class SplashScreen(customtkinter.CTk):
