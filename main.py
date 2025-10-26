@@ -76,21 +76,29 @@ class App(customtkinter.CTk):
         data = CDPdata.getCdpData(period)
         CDPplot.createCdpPlot(self.plot_frame, period, data)
         self.updatePriceLabel()
-        self.updateMinMaxLabels(data, period)
+        self.updateMinMaxLabels(data)
         self.state("zoomed")
-
+        
+    def showCustomDatePlot(self):
+        start_date = self.start_date_entry.get_date()
+        end_date = self.end_date_entry.get_date()
+        for widget in self.plot_frame.winfo_children():
+            widget.destroy()
+        CDPplot.createCustomDataCdpPlot(self.plot_frame, start_date, end_date)
+        
     def updatePriceLabel(self):
         price = CDPdata.getCurrentPrice()
         self.price_label_value.configure(text=f"{price} PLN")
 
-    def updateMinMaxLabels(self, data, period):
-        min_price, max_price = CDPdata.getMinMaxPrice(data, period)
+    def updateMinMaxLabels(self, data):
+        min_price, max_price = CDPdata.getMinMaxPrice(data)
         self.min_label_value.configure(text=f"{min_price} PLN")
         self.max_label_value.configure(text=f"{max_price} PLN")
 
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
 
