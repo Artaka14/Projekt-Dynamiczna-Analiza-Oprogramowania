@@ -28,6 +28,24 @@ def getCdpData(period):
     data["sample_index"] = range(len(data))
 
     return data
+    
+#Funkcja, która zdobywa informacje o kursie CDPu dla customowej daty wybranej przez użytkownika
+def getCustomCdpData(start_time, end_time): 
+
+    if end_time.weekday() >= 5: 
+       days_to_subtract = end_time.weekday() - 4 
+       end_time -= timedelta(days=days_to_subtract)
+
+    data = yf.download("CDR.WA", start=start_time, end=end_time, interval="15m", progress=False)
+
+    if data.empty:
+        raise ValueError("Brak danych dla wybranego okresu.")
+
+    data = data.reset_index(drop=False)
+    data["sample_index"] = range(len(data))
+
+    return data
+    
 #Funkcja, która pobiera informacje o kursie
 def getCurrentPrice():
     ticker = yf.Ticker("CDR.WA")
@@ -41,6 +59,7 @@ def getMinMaxPrice(data=None, period="7d"):
     min_price = round(float(data["Close"].min()), 2)
     max_price = round(float(data["Close"].max()), 2)
     return min_price, max_price
+
 
 
 
