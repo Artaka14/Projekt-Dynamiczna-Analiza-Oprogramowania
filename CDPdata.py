@@ -1,7 +1,7 @@
 import yfinance as yf
 from datetime import datetime, timedelta
 
-#Funkcja, ktÃ³ra zdobywa informacje o kursie CDPu do wykresu
+#Funkcja, która zdobywa informacje o kursie CDPu do wykresu
 def getCdpData(period): 
     end_time = datetime.now()
 
@@ -28,25 +28,37 @@ def getCdpData(period):
     data["sample_index"] = range(len(data))
 
     return data
-    
-#Funkcja, ktÃ³ra zdobywa informacje o kursie CDPu dla customowej daty wybranej przez uÅ¼ytkownika
+
+#Funkcja, która zdobywa informacje o kursie CDPu dla customowej daty wybranej przez u¿ytkownika
 def getCustomCdpData(start_time, end_time): 
 
     if end_time.weekday() >= 5: 
        days_to_subtract = end_time.weekday() - 4 
        end_time -= timedelta(days=days_to_subtract)
 
-    data = yf.download("CDR.WA", start=start_time, end=end_time, interval="15m", progress=False)
+    time_difference = (end_time - start_time).days
+    if time_difference <= 3:
+        interval = "1m"
+    elif time_difference <= 14:
+        interval = "5m"
+    elif time_difference <= 30:
+        interval = "15m"
+    elif time_difference <= 250:
+        interval = "1h"  
+    else:
+        interval = "1d"
+    data = yf.download("CDR.WA", start=start_time, end=end_time, interval = interval, progress=False)
 
     if data.empty:
         raise ValueError("Brak danych dla wybranego okresu.")
 
     data = data.reset_index(drop=False)
+    data.rename(columns={'Date': 'Datetime'}, inplace=True)
     data["sample_index"] = range(len(data))
 
     return data
-    
-#Funkcja, ktÃ³ra pobiera informacje o kursie
+
+#Funkcja, która pobiera informacje o kursie
 def getCurrentPrice():
     ticker = yf.Ticker("CDR.WA")
     data = ticker.history(period="1d", interval="1m")
@@ -54,13 +66,8 @@ def getCurrentPrice():
         return round(data["Close"].iloc[-1], 2)
     return None
 
-#Funkcja szukajÄ…ca minimalnej i maksymalnej wartoÅ›ci 
+#Funkcja szukaj¹ca minimalnej i maksymalnej wartoœci 
 def getMinMaxPrice(data=None):
     min_price = round(float(data["Close"].min()), 2)
     max_price = round(float(data["Close"].max()), 2)
     return min_price, max_price
-
-
-
-
-
