@@ -62,7 +62,7 @@ def createCustomDataCdpPlot(frame, start_date, end_date, data):
 
     miesiace = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"]
 
-    if total_days <= 14:  
+    if total_days <= 50:  
         ticks = session_bounds["min"].tolist()
         labels = [d.strftime("%d %b %Y") for d in session_bounds.index]
         ticks.append(session_bounds["max"].iloc[-1])
@@ -97,4 +97,5 @@ def createCustomDataCdpPlot(frame, start_date, end_date, data):
 
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.draw()
+
     canvas.get_tk_widget().pack(fill="both", expand=True)
