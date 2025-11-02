@@ -1,7 +1,8 @@
 import yfinance as yf
 from datetime import datetime, timedelta
+from pytrends.request import TrendReq
 
-#Funkcja, która zdobywa informacje o kursie CDPu do wykresu
+#Funkcja, ktÃ³ra zdobywa informacje o kursie CDPu do wykresu
 def getCdpData(period): 
     end_time = datetime.now()
 
@@ -29,7 +30,7 @@ def getCdpData(period):
 
     return data
 
-#Funkcja, która zdobywa informacje o kursie CDPu dla customowej daty wybranej przez u¿ytkownika
+#Funkcja, ktÃ³ra zdobywa informacje o kursie CDPu dla customowej daty wybranej przez uÂ¿ytkownika
 def getCustomCdpData(start_time, end_time): 
 
     if end_time.weekday() >= 5: 
@@ -58,7 +59,7 @@ def getCustomCdpData(start_time, end_time):
 
     return data
 
-#Funkcja, która pobiera informacje o kursie
+#Funkcja, ktÃ³ra pobiera informacje o kursie
 def getCurrentPrice():
     ticker = yf.Ticker("CDR.WA")
     data = ticker.history(period="1d", interval="1m")
@@ -66,8 +67,30 @@ def getCurrentPrice():
         return round(data["Close"].iloc[-1], 2)
     return None
 
-#Funkcja szukaj¹ca minimalnej i maksymalnej wartoœci 
+#Funkcja szukajÂ¹ca minimalnej i maksymalnej wartoÅ“ci 
 def getMinMaxPrice(data=None):
     min_price = round(float(data["Close"].min()), 2)
     max_price = round(float(data["Close"].max()), 2)
     return min_price, max_price
+
+def getTrendsData(period):
+    
+    if period == "1d":
+        timeframe = "now 1-d"     
+    elif period == "7d":
+        timeframe = "now 7-d"     
+    elif period == "1m":
+        timeframe = "today 1-m"
+        
+    pytrends = TrendReq(hl="pl-PL", tz=360)
+    pytrends.build_payload(["CD Projekt"], cat=0,timeframe=timeframe, geo='', gprop='')
+    data = pytrends.interest_over_time()
+    if data.empty:
+        raise ValueError("Brak danych z Google Trends dla tego okresu.")
+    
+    if 'isPartial' in data.columns:
+        data = data.drop(columns=['isPartial'])
+    
+    data = data.reset_index()
+    data["sample_index"] = range(len(data))
+    return data
