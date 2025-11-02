@@ -1,5 +1,6 @@
-﻿import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import yfinance as yf
+import customtkinter
 import pandas as pd
 import CDPdata
 import main
@@ -40,7 +41,9 @@ def createCdpPlot(frame, period, data):
 
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.draw()
-    canvas.get_tk_widget().pack(fill="both", expand=True)
+    canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+    frame.rowconfigure(0, weight=1)
+    frame.columnconfigure(0, weight=1)
 
 def createCustomDataCdpPlot(frame, start_date, end_date, data):
     if data.empty:
@@ -99,3 +102,42 @@ def createCustomDataCdpPlot(frame, start_date, end_date, data):
     canvas.draw()
 
     canvas.get_tk_widget().pack(fill="both", expand=True)
+
+def createTrendsPlot(frame, period, data):
+    
+    if data is None or data.empty:
+        showError(frame, "Nie udało się pobrać danych z Google Trends")
+        return
+    
+    fig, ax = plt.subplots(figsize=(8, 4))
+    
+    ax.plot(data["sample_index"], data["CD Projekt"], color="red", label="Zainteresowanie: CD Projekt")
+    ax.set_title(f"Google Trends ({period})")
+    ax.set_ylabel("Zainteresowanie (%)")
+
+    tick_step = max(1, len(data) // 6)
+    ax.set_xticks(data["sample_index"][::tick_step])
+    ax.set_xticklabels(data["date"].dt.strftime("%d.%m")[::tick_step], rotation=45)
+
+    ax.grid(True)
+    plt.tight_layout()
+
+    canvas = FigureCanvasTkAgg(fig, master=frame)
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+    frame.rowconfigure(0, weight=1)
+    frame.columnconfigure(0, weight=1)
+    
+def showError(frame, message="Nie udało się pobrać danych"):
+    for widget in frame.winfo_children():
+        widget.destroy()
+    error_label = customtkinter.CTkLabel(
+        frame,
+        text=message,
+        font=("Arial", 16, "bold"),
+        text_color="red"
+    )
+    error_label.pack(expand=True)
+
+    canvas.get_tk_widget().pack(fill="both", expand=True)
+
