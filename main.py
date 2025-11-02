@@ -1,4 +1,4 @@
-﻿import customtkinter
+import customtkinter
 import CDPplot
 import CDPdata
 import Splash
@@ -7,8 +7,10 @@ from CTkMessagebox import CTkMessagebox
 from datetime import datetime
 
 class App(customtkinter.CTk):
-    def __init__(self, preloaded_data=None):
+    def __init__(self, preloaded_data=None, preloaded_trends=None):
         super().__init__()
+        self.trends_cache = preloaded_trends or {}
+        
         self.geometry("1280x720")
         self.title("CD Projekt SA")
 
@@ -17,6 +19,9 @@ class App(customtkinter.CTk):
 
         self.plot_frame = customtkinter.CTkFrame(self.main_frame)
         self.plot_frame.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+        self.trends_frame = customtkinter.CTkFrame(self.plot_frame)
+        self.trends_frame.pack(side="bottom", fill="both", expand=False, pady=(10, 0))
 
         self.right_frame = customtkinter.CTkFrame(self.main_frame)
         self.right_frame.pack(side="right", fill="y", padx=(10, 0), pady=10)
@@ -90,13 +95,30 @@ class App(customtkinter.CTk):
         self.custom_date_button.pack(pady=10)
 
         if preloaded_data is not None:
-             self.showPlot("7d") 
+             self.showPlot("7d")
+             self.after(200, lambda: self.showPlot("7d"))
 
     def showPlot(self, period):
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
+        
+        self.plot_frame.rowconfigure(0, weight=4)   # CD Projekt — 80%
+        self.plot_frame.rowconfigure(1, weight=1)   # Google Trends — 20%
+        self.plot_frame.columnconfigure(0, weight=1)
+
+        #Ramka na CD Projekt
+        main_plot = customtkinter.CTkFrame(self.plot_frame)
+        main_plot.grid(row=0, column=0, sticky="nsew", padx=0, pady=(0, 5))
+
+        #Ramka na Trendy
+        self.trends_frame = customtkinter.CTkFrame(self.plot_frame)
+        self.trends_frame.grid(row=1, column=0, sticky="nsew", padx=0, pady=(5, 0))
+
         data = CDPdata.getCdpData(period)
         CDPplot.createCdpPlot(self.plot_frame, period, data)
+        trends_data = self.trends_cache.get(period)
+        if trends_data is not None:
+            CDPplot.createTrendsPlot(self.trends_frame, period, trends_data)
         self.updatePriceLabel()
         self.updateMinMaxLabels(data)
         self.state("zoomed")
