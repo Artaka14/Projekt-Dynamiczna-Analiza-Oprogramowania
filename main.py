@@ -129,29 +129,17 @@ class App(customtkinter.CTk):
         today = datetime.now().date()
 
         if start_date > end_date:
-            CTkMessagebox(
-                title="Błędny zakres dat",
-                message="Data początkowa nie może być późniejsza niż końcowa.",
-                icon="cancel"
-            )
+            self.showError("Błędny zakres dat", "Data początkowa nie może być późniejsza niż końcowa.")
             return
 
         if start_date > today or end_date > today:
-            CTkMessagebox(
-                title="Błędny zakres dat",
-                message="Nie można wybrać dat z przyszłości.",
-                icon="warning"
-            )
+            self.showError("Błędny zakres dat", "Nie można wybrać dat z przyszłości.")
             return
         if (end_date - start_date).days <= 1:
-            print("XD")
             if start_date.weekday() >= 5 and end_date.weekday() >= 5:
-               CTkMessagebox(
-                  title="Błędny zakres dat",
-                  message="Nie można wybrać tylko dni weekendu.",
-                  icon="warning"
-               )
+               self.showError("Błędny zakres dat", "Nie można wybrać tylko dni weekendu.")
                return
+                
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
         data = CDPdata.getCustomCdpData(start_date, end_date)
@@ -169,6 +157,14 @@ class App(customtkinter.CTk):
         self.min_label_value.configure(text=f"{min_price} PLN")
         self.max_label_value.configure(text=f"{max_price} PLN")
 
+    def showError(self, title ="", message="",icon="warning"):
+        CTkMessagebox(
+                  title=title,
+                  message=message,
+                  icon=icon
+               )
+
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
