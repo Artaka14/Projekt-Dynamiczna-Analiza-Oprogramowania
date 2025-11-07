@@ -9,23 +9,54 @@ from datetime import datetime
 class App(customtkinter.CTk):
     def __init__(self, preloaded_data=None, preloaded_trends=None):
         super().__init__()
-        self.trends_cache = preloaded_trends or {}
         
         self.geometry("1280x720")
-        self.title("CD Projekt SA")
+        self.title("CD Projekt SA - Wykres akcji")
 
+        self.screen1 = Screen1(self)
+        self.screen2 = Screen2(self)
+        self.screen3 = Screen3(self)
+
+        self.show_frame(self.screen1)
+        self.screen1.showPlot("7d")
+
+    def show_frame(self, frame):
+        for f in (self.screen1, self.screen2, self.screen3):
+            f.pack_forget()
+
+        frame.pack(fill="both", expand=True)
+
+#Ekran wykresu akcji
+class Screen1(customtkinter.CTkFrame):
+    def __init__(self, master, preloaded_data=None, preloaded_trends=None):
+        super().__init__(master)
+
+        master.title("CD Projekt SA - Wykres akcji")
+        self.trends_cache = preloaded_trends or {}
+
+        # Główna ramka
         self.main_frame = customtkinter.CTkFrame(self)
         self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
+        # Lewa strona – wykres
         self.plot_frame = customtkinter.CTkFrame(self.main_frame)
         self.plot_frame.pack(side="left", fill="both", expand=True, padx=(0, 10))
 
-        self.trends_frame = customtkinter.CTkFrame(self.plot_frame)
-        self.trends_frame.pack(side="bottom", fill="both", expand=False, pady=(10, 0))
-
+        # Prawa strona – panele z informacjami i przyciskami
         self.right_frame = customtkinter.CTkFrame(self.main_frame)
         self.right_frame.pack(side="right", fill="y", padx=(10, 0), pady=10)
 
+        # Dolne przyciski nawigacyjne
+        nav_frame = customtkinter.CTkFrame(self)
+        nav_frame.pack(side="bottom", fill="x", pady=10, padx=10)
+
+        btn_left = customtkinter.CTkButton(nav_frame, text="Google Trends", command=lambda: master.show_frame(master.screen2))
+        btn_left.pack(side="left", anchor="sw")
+
+        btn_right = customtkinter.CTkButton(nav_frame, text="Sprawozdanie kwartalne", command=lambda: master.show_frame(master.screen3))
+        btn_right.pack(side="right", anchor="se")
+
+        # Aktualna cena
         self.price_frame = customtkinter.CTkFrame(self.right_frame)
         self.price_frame.pack(pady=(10, 20))
 
@@ -35,6 +66,7 @@ class App(customtkinter.CTk):
         self.price_label_value = customtkinter.CTkLabel(self.price_frame, text="...", font=("Arial", 16))
         self.price_label_value.pack(pady=(5, 0))
 
+        # Min/Max
         self.minmax_frame = customtkinter.CTkFrame(self.right_frame)
         self.minmax_frame.pack(pady=(10, 20))
 
@@ -59,6 +91,7 @@ class App(customtkinter.CTk):
         self.max_label_value = customtkinter.CTkLabel(self.max_frame, text="...", font=("Arial", 16))
         self.max_label_value.pack(pady=(5, 0))
 
+        # Zakres danych
         label = customtkinter.CTkLabel(self.right_frame, text="Zakres danych", font=("Arial", 14, "bold"))
         label.pack(pady=(0, 10))
 
@@ -66,14 +99,10 @@ class App(customtkinter.CTk):
         button_frame.pack(pady=10)
 
         for period in ["1d", "7d", "1m"]:
-            btn = customtkinter.CTkButton(
-                button_frame,
-                text=period,
-                width=70,
-                command=lambda p=period: self.showPlot(p)
-            )
+            btn = customtkinter.CTkButton(button_frame, text=period, width=70, command=lambda p=period: self.showPlot(p))
             btn.pack(side="left", padx=5)
 
+        # Własny zakres
         self.date_picker_frame = customtkinter.CTkFrame(self.right_frame, width=300)
         self.date_picker_frame.pack(pady=20)
 
@@ -90,38 +119,21 @@ class App(customtkinter.CTk):
         self.end_date_entry = DateEntry(self.date_inputs_frame, width=12, date_pattern="yyyy-mm-dd")
         self.end_date_entry.grid(row=0, column=3, padx=5, pady=2, sticky="w")
 
-
         self.custom_date_button = customtkinter.CTkButton(self.date_picker_frame, text="Pokaż wykres", command=self.showCustomDatePlot)
         self.custom_date_button.pack(pady=10)
 
         if preloaded_data is not None:
-             self.showPlot("7d")
-             self.after(200, lambda: self.showPlot("7d"))
+            self.after(200, lambda: self.showPlot("7d"))
 
     def showPlot(self, period):
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
-        
-        self.plot_frame.rowconfigure(0, weight=4)   # CD Projekt — 80%
-        self.plot_frame.rowconfigure(1, weight=1)   # Google Trends — 20%
-        self.plot_frame.columnconfigure(0, weight=1)
-
-        #Ramka na CD Projekt
-        main_plot = customtkinter.CTkFrame(self.plot_frame)
-        main_plot.grid(row=0, column=0, sticky="nsew", padx=0, pady=(0, 5))
-
-        #Ramka na Trendy
-        self.trends_frame = customtkinter.CTkFrame(self.plot_frame)
-        self.trends_frame.grid(row=1, column=0, sticky="nsew", padx=0, pady=(5, 0))
 
         data = CDPdata.getCdpData(period)
         CDPplot.createCdpPlot(self.plot_frame, period, data)
-        trends_data = self.trends_cache.get(period)
-        if trends_data is not None:
-            CDPplot.createTrendsPlot(self.trends_frame, period, trends_data)
+
         self.updatePriceLabel()
         self.updateMinMaxLabels(data)
-        self.state("zoomed")
 
     def showCustomDatePlot(self):
         start_date = self.start_date_entry.get_date()
@@ -135,17 +147,13 @@ class App(customtkinter.CTk):
         if start_date > today or end_date > today:
             self.showError("Błędny zakres dat", "Nie można wybrać dat z przyszłości.")
             return
-        if (end_date - start_date).days <= 1:
-            if start_date.weekday() >= 5 and end_date.weekday() >= 5:
-               self.showError("Błędny zakres dat", "Nie można wybrać tylko dni weekendu.")
-               return
-                
+
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
+
         data = CDPdata.getCustomCdpData(start_date, end_date)
-        print(data.head())
-        print(data.columns)
         CDPplot.createCustomDataCdpPlot(self.plot_frame, start_date, end_date, data)
+
         self.updateMinMaxLabels(data)
 
     def updatePriceLabel(self):
@@ -157,14 +165,39 @@ class App(customtkinter.CTk):
         self.min_label_value.configure(text=f"{min_price} PLN")
         self.max_label_value.configure(text=f"{max_price} PLN")
 
-    def showError(self, title ="", message="",icon="warning"):
-        CTkMessagebox(
-                  title=title,
-                  message=message,
-                  icon=icon
-               )
+    def showError(self, title="", message="", icon="warning"):
+        CTkMessagebox(title=title, message=message, icon=icon)
+
+#Ekran Google Trends
+class Screen2(customtkinter.CTkFrame):
+    def __init__(self, master, preloaded_data=None, preloaded_trends=None):
+        super().__init__(master)
+        master.title("CD Projekt SA - Google Trends")
+
+        nav_frame = customtkinter.CTkFrame(self)
+        nav_frame.pack(side="bottom", fill="x", pady=10, padx=10)
+
+        btn_left = customtkinter.CTkButton(nav_frame, text="Sprawozdanie kwartalne", command=lambda: master.show_frame(master.screen3))
+        btn_left.pack(side="left", anchor="sw")
+
+        btn_right = customtkinter.CTkButton(nav_frame, text="Wykres akcji", command=lambda: master.show_frame(master.screen1))
+        btn_right.pack(side="right", anchor="se")
+
+#Ekran sprawozdań kwartalnych
+class Screen3(customtkinter.CTkFrame):
+    def __init__(self, master, preloaded_data=None, preloaded_trends=None):
+        super().__init__(master)
+        master.title("CD Projekt SA - Sprawozdanie kwartalne")
+
+        nav_frame = customtkinter.CTkFrame(self)
+        nav_frame.pack(side="bottom", fill="x", pady=10, padx=10)
+
+        btn_left = customtkinter.CTkButton(nav_frame, text="Wykres akcji", command=lambda: master.show_frame(master.screen1))
+        btn_left.pack(side="left", anchor="sw")
+
+        btn_right = customtkinter.CTkButton(nav_frame, text="Google Trends", command=lambda: master.show_frame(master.screen2))
+        btn_right.pack(side="right", anchor="se")
 
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
-
