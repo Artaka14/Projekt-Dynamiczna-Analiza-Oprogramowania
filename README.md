@@ -1,1 +1,1 @@
-# Projekt-Dynamiczna-Analiza-Oprogramowania
+# Aplikacja do śledzenia kursu akcji CD Projekt SA
