@@ -83,17 +83,60 @@ def getMinMaxPrice(data=None):
 
     return min_price, max_price
 
-def getTrendsData():
+CACHE_DIR = "cache"
+
+def ensure_cache_dir():
+    if not os.path.exists(CACHE_DIR):
+        os.makedirs(CACHE_DIR)
+
+def getTrendsData(period):
         
+    ensure_cache_dir()
+    CACHE_FILE = os.path.join(CACHE_DIR, f"trends_{period}.json")
+    
+    # jeśli istnieje cache
+    if os.path.exists(CACHE_FILE):
+        try:
+            print(f"Wczytano dane Trends z pliku cache ({CACHE_FILE})")
+            with open(CACHE_FILE, "r", encoding="utf-8") as f:
+                cached = json.load(f)
+            df = pd.DataFrame.from_dict(cached)
+            df.index = pd.to_datetime(df.index)
+            return df
+        except Exception as e:
+            print(f"Nie udało się wczytać pliku cache ({e}), pobieram nowe dane...")
+
+    # Jeśli nie ma cache — pobierz z Google
+    print(f"Pobieranie danych Trends ({period}) z Google...")
     pytrends = TrendReq(hl="pl-PL", tz=360)
-    pytrends.build_payload(["CD Projekt"], cat=0,timeframe="today 12-m", geo='', gprop='')
-    data = pytrends.interest_over_time()
-    if data.empty or data is None:
-        raise ValueError("Brak danych z Google Trends dla tego okresu.")
-    
-    if 'isPartial' in data.columns:
-        data = data.drop(columns=['isPartial'])
-    
-    data = data.reset_index()
-    data["sample_index"] = range(len(data))
-    return data
+
+    if period == "1d":
+        timeframe = "now 1-d"
+    elif period == "7d":
+        timeframe = "now 7-d"
+    elif period == "1m":
+        timeframe = "today 1-m"
+    else:
+        timeframe = "today 12-m"
+
+    pytrends.build_payload(["CD Projekt"], cat=0, timeframe=timeframe, geo="", gprop="")
+    df = pytrends.interest_over_time()
+
+    if df.empty:
+        print("Nie udało się pobrać danych z Google Trends.")
+        return None
+
+    # Usuń kolumnę isPartial, jeśli istnieje
+    if "isPartial" in df.columns:
+        df = df.drop(columns=["isPartial"])
+
+    # Zapisz do pliku cache w formacie JSON
+    df_to_save = df.copy()
+    df_to_save.index = df_to_save.index.astype(str)
+
+    # Tu jest ważna poprawka — zapisujemy DataFrame.to_dict()
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(df_to_save.to_dict(orient="index"), f, ensure_ascii=False, indent=2)
+
+    print(f"Zapisano dane do cache: {CACHE_FILE}")
+    return df
