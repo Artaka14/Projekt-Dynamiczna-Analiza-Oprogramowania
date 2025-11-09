@@ -67,10 +67,19 @@ def getCurrentPrice():
         return round(data["Close"].iloc[-1], 2)
     return None
 
-#Funkcja szukaj¹ca minimalnej i maksymalnej wartoœci 
+#Funkcja szukająca minimalnej i maksymalnej wartości 
 def getMinMaxPrice(data=None):
-    min_price = round(float(data["Close"].min()), 2)
-    max_price = round(float(data["Close"].max()), 2)
+    min_val = data["Close"].min()
+    max_val = data["Close"].max()
+
+    if isinstance(min_val, pd.Series):
+        min_val = min_val.iloc[0]
+    if isinstance(max_val, pd.Series):
+        max_val = max_val.iloc[0]
+
+    min_price = round(float(min_val), 2)
+    max_price = round(float(max_val), 2)
+
     return min_price, max_price
 
 def getTrendsData(period):
@@ -94,3 +103,4 @@ def getTrendsData(period):
     data = data.reset_index()
     data["sample_index"] = range(len(data))
     return data
+
