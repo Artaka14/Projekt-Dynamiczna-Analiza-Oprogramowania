@@ -45,35 +45,33 @@ def createCdpPlot(frame, period, data):
     frame.rowconfigure(0, weight=1)
     frame.columnconfigure(0, weight=1)
 
+#Funkcja do generowania wykresu z customową datą
 def createCustomDataCdpPlot(frame, start_date, end_date, data):
     if data.empty:
-       raise ValueError("Brak danych dla wybranego zakresu.")
+        raise ValueError("Brak danych dla wybranego zakresu.")
+
+    data = data.copy()
+    data["date"] = pd.to_datetime(data["Datetime"].dt.date)
+    session_bounds = data.groupby("date")["sample_index"].agg(["min", "max"])
+    total_days = (data["date"].max() - data["date"].min()).days
+
+    first_day = session_bounds.index.min()
+    last_day = session_bounds.index.max()
 
     fig, ax = plt.subplots(figsize=(8, 4))
-
     ax.plot(data["sample_index"], data["Close"], label="CD Projekt S.A.")
     ax.set_title(f"CD Projekt S.A. — {start_date} → {end_date}")
     ax.set_ylabel("Cena (PLN)")
 
-    session_bounds = data.groupby(data["Datetime"].dt.date)["sample_index"].agg(['min', 'max'])
-
-    data = data.copy()
-    data["date"] = pd.to_datetime(data["Datetime"].dt.date)
-
-    session_bounds = data.groupby("date")["sample_index"].agg(["min", "max"])
-    total_days = (data["date"].max() - data["date"].min()).days
-
     miesiace = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"]
 
-    if total_days <= 50:  
+    if total_days <= 85:
         ticks = session_bounds["min"].tolist()
         labels = [d.strftime("%d %b %Y") for d in session_bounds.index]
         ticks.append(session_bounds["max"].iloc[-1])
         labels.append((session_bounds.index[-1] + pd.Timedelta(days=1)).strftime("%d %b %Y"))
-    else: 
-        first_day = session_bounds.index.min()
-        last_day = session_bounds.index.max()
 
+    elif total_days <= 800:
         month_starts = []
         current = pd.Timestamp(first_day.replace(day=1))
         while current <= last_day:
@@ -84,23 +82,50 @@ def createCustomDataCdpPlot(frame, start_date, end_date, data):
 
         ticks = []
         for m in month_starts:
-            if m in session_bounds.index:
-                ticks.append(session_bounds.loc[m, "min"])
-            else:
-                nearest = min(session_bounds.index, key=lambda x: abs((x - m).days))
-                ticks.append(session_bounds.loc[nearest, "min"])
+            nearest = min(session_bounds.index, key=lambda x: abs((x - m).days))
+            ticks.append(session_bounds.loc[nearest, "min"])
 
         labels = [f"{miesiace[m.month - 1]} {m.year}" for m in month_starts]
 
+    elif total_days <= 1500:
+        quarter_starts = []
+        current = pd.Timestamp(first_day.replace(month=1, day=1))
+        while current <= last_day:
+            for month in [1, 4, 7, 10]:
+                q_date = pd.Timestamp(year=current.year, month=month, day=1)
+                if first_day <= q_date <= last_day:
+                    quarter_starts.append(q_date)
+            current = pd.Timestamp(year=current.year + 1, month=1, day=1)
+
+        ticks = []
+        for q in quarter_starts:
+            nearest = min(session_bounds.index, key=lambda x: abs((x - q).days))
+            ticks.append(session_bounds.loc[nearest, "min"])
+
+        labels = [f"Q{((q.month - 1)//3) + 1} {q.year}" for q in quarter_starts]
+
+    else:
+        year_starts = []
+        current = pd.Timestamp(first_day.replace(month=1, day=1))
+        while current <= last_day:
+            year_starts.append(current)
+            current = pd.Timestamp(year=current.year + 1, month=1, day=1)
+
+        ticks = []
+        for y in year_starts:
+            nearest = min(session_bounds.index, key=lambda x: abs((x - y).days))
+            ticks.append(session_bounds.loc[nearest, "min"])
+
+        labels = [str(y.year) for y in year_starts]
+
     ax.set_xticks(ticks)
     ax.set_xticklabels(labels, rotation=45)
-
+    ax.tick_params(axis='x', labelsize=9)
     ax.grid(True)
     plt.tight_layout()
 
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.draw()
-
     canvas.get_tk_widget().pack(fill="both", expand=True)
 
 def createTrendsPlot(frame, period, data):
@@ -140,4 +165,5 @@ def showError(frame, message="Nie udało się pobrać danych"):
     error_label.pack(expand=True)
 
     canvas.get_tk_widget().pack(fill="both", expand=True)
+
 
