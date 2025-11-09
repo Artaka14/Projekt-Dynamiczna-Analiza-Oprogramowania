@@ -129,29 +129,33 @@ def createCustomDataCdpPlot(frame, start_date, end_date, data):
     canvas.get_tk_widget().pack(fill="both", expand=True)
 
 def createTrendsPlot(frame, period, data):
-    
+
     if data is None or data.empty:
-        showError(frame, "Nie udało się pobrać danych z Google Trends")
+        label = customtkinter.CTkLabel(frame, text="Nie udało się pobrać danych z Google Trends", text_color="red")
+        label.pack(expand=True)
         return
-    
-    fig, ax = plt.subplots(figsize=(8, 4))
-    
-    ax.plot(data["sample_index"], data["CD Projekt"], color="red", label="Zainteresowanie: CD Projekt")
-    ax.set_title(f"Google Trends ({period})")
-    ax.set_ylabel("Zainteresowanie (%)")
 
-    tick_step = max(1, len(data) // 6)
-    ax.set_xticks(data["sample_index"][::tick_step])
-    ax.set_xticklabels(data["date"].dt.strftime("%d.%m")[::tick_step], rotation=45)
+    fig, ax = plt.subplots(figsize=(8, 3))
 
+    end = data.index.max()
+    if period == "1d":
+        start = end - timedelta(days=1)
+    elif period == "7d":
+        start = end - timedelta(days=7)
+    elif period == "1m":
+        start = end - timedelta(days=30)
+    else:
+        start = data.index.min()
+
+    filtered = data.loc[start:end]
+
+    ax.plot(filtered.index, filtered["CD Projekt"], label="Zainteresowanie wyszukiwań CD Projekt")
+    ax.set_title("Popularność wyszukiwań (Google Trends)")
     ax.grid(True)
-    plt.tight_layout()
 
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.draw()
-    canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
-    frame.rowconfigure(0, weight=1)
-    frame.columnconfigure(0, weight=1)
+    canvas.get_tk_widget().pack(fill="both", expand=True)
     
 def showError(frame, message="Nie udało się pobrać danych"):
     for widget in frame.winfo_children():
@@ -165,5 +169,6 @@ def showError(frame, message="Nie udało się pobrać danych"):
     error_label.pack(expand=True)
 
     canvas.get_tk_widget().pack(fill="both", expand=True)
+
 
 
