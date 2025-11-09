@@ -174,6 +174,25 @@ class Screen2(customtkinter.CTkFrame):
         super().__init__(master)
         master.title("CD Projekt SA - Google Trends")
 
+        self.trends_data = preloaded_trends
+
+        # Ramka główna
+        self.main_frame = customtkinter.CTkFrame(self)
+        self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Ramka na wykres
+        self.plot_frame = customtkinter.CTkFrame(self.main_frame)
+        self.plot_frame.pack(fill="both", expand=True)
+
+        # Przyciski zakresu
+        self.period_frame = customtkinter.CTkFrame(self)
+        self.period_frame.pack(pady=10)
+
+        for period in ["1d", "7d", "1m", "12m"]:
+            btn = customtkinter.CTkButton(self.period_frame, text=period, width=70, command=lambda p=period: self.showTrendsPlot(p))
+            btn.pack(side="left", padx=5)
+
+        # Dolne przyciski
         nav_frame = customtkinter.CTkFrame(self)
         nav_frame.pack(side="bottom", fill="x", pady=10, padx=10)
 
@@ -182,6 +201,14 @@ class Screen2(customtkinter.CTkFrame):
 
         btn_right = customtkinter.CTkButton(nav_frame, text="Wykres akcji", command=lambda: master.show_frame(master.screen1))
         btn_right.pack(side="right", anchor="se")
+
+        self.showTrendsPlot("7d")
+        
+    def showTrendsPlot(self, period):
+        for widget in self.plot_frame.winfo_children():
+            widget.destroy()
+
+        CDPplot.createTrendsPlot(self.plot_frame, period, self.trends_data)
 
 #Ekran sprawozdań kwartalnych
 class Screen3(customtkinter.CTkFrame):
@@ -201,3 +228,4 @@ class Screen3(customtkinter.CTkFrame):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
