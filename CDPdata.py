@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 from pytrends.request import TrendReq
+import json, os
 
 #Funkcja, która zdobywa informacje o kursie CDPu do wykresu
 def getCdpData(period): 
@@ -140,3 +141,4 @@ def getTrendsData(period):
 
     print(f"Zapisano dane do cache: {CACHE_FILE}")
     return df
+
