@@ -1,4 +1,5 @@
 import yfinance as yf
+import pandas as pd
 from datetime import datetime, timedelta
 from pytrends.request import TrendReq
 
@@ -103,4 +104,5 @@ def getTrendsData(period):
     data = data.reset_index()
     data["sample_index"] = range(len(data))
     return data
+
 
