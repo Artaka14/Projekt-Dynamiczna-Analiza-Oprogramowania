@@ -83,19 +83,12 @@ def getMinMaxPrice(data=None):
 
     return min_price, max_price
 
-def getTrendsData(period):
-    
-    if period == "1d":
-        timeframe = "now 1-d"     
-    elif period == "7d":
-        timeframe = "now 7-d"     
-    elif period == "1m":
-        timeframe = "today 1-m"
+def getTrendsData():
         
     pytrends = TrendReq(hl="pl-PL", tz=360)
-    pytrends.build_payload(["CD Projekt"], cat=0,timeframe=timeframe, geo='', gprop='')
+    pytrends.build_payload(["CD Projekt"], cat=0,timeframe="today 12-m", geo='', gprop='')
     data = pytrends.interest_over_time()
-    if data.empty:
+    if data.empty or data is None:
         raise ValueError("Brak danych z Google Trends dla tego okresu.")
     
     if 'isPartial' in data.columns:
@@ -104,5 +97,3 @@ def getTrendsData(period):
     data = data.reset_index()
     data["sample_index"] = range(len(data))
     return data
-
-
