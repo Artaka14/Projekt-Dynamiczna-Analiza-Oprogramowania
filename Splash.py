@@ -37,22 +37,20 @@ class SplashScreen(customtkinter.CTk):
         except Exception as e:
             print("Błąd pobierania danych:", e)
             data = None
-
-        self.trends_data = {}
-        for period in ["1d", "7d", "1m"]:
-            try:
-                self.trends_data[period] = CDPdata.getTrendsData(period)
-            except Exception as e:
-                print(f"Błąd pobierania trends dla {period}: {e}")
-                self.trends_data[period] = None
+            
+        try:
+            trends_data = CDPdata.getTrendsData()
+        except Exception as e:
+            print("Błąd pobierania danych - trends:", e)
+            trends_data=None
 
         elapsed = time.time() - start_time
         if elapsed < 2.5:
             time.sleep(2.5 - elapsed)
 
-        self.after(0, lambda: self.open_main_app(data))
+        self.after(0, lambda: self.open_main_app(data,trends_data))
 
-    def open_main_app(self, data):
+    def open_main_app(self, data, trends_data):
         self.destroy()
-        app = main.App(preloaded_data=data, preloaded_trends=self.trends_data)
+        app = main.App(preloaded_data=data, preloaded_trends=trends_data)
         app.mainloop()
