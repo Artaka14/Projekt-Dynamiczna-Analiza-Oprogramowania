@@ -2,7 +2,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 from pytrends.request import TrendReq
-import json, os
+import json, os, time
 
 #Funkcja, która zdobywa informacje o kursie CDPu do wykresu
 def getCdpData(period): 
@@ -205,3 +205,4 @@ def getTrendsData(period: str) -> pd.DataFrame | None:
     except Exception as e:
         print(f"Błąd pobierania Trends: {e}")
         return None
+
