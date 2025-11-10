@@ -179,23 +179,32 @@ class Screen2(customtkinter.CTkFrame):
 
         self.trends_cache = {}  # pamięć podręczna
 
+         # --- Ramka na wykres Google Trends ---
         self.plot_frame = customtkinter.CTkFrame(self)
-        self.plot_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.plot_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Przyciski
-        button_frame = customtkinter.CTkFrame(self)
-        button_frame.pack(pady=10)
+        # --- Domyślny zakres (7d) ---
+        self.current_period = "7d"
+
+        # --- Górny pasek z przyciskami okresów i odświeżania ---
+        top_bar = customtkinter.CTkFrame(self)
+        top_bar.pack(fill="x", pady=(10, 0))
 
         for period in ["1d", "7d", "1m"]:
             btn = customtkinter.CTkButton(
-                button_frame,
-                text=period,
-                width=70,
+                top_bar, text=period, width=70,
                 command=lambda p=period: self.showTrendsPlot(p)
             )
             btn.pack(side="left", padx=5)
-            
-        self.showTrendsPlot("7d")
+
+        refresh_btn = customtkinter.CTkButton(
+            top_bar, text="Odśwież dane", width=100,
+            command=self.refreshTrends
+        )
+        refresh_btn.pack(side="right", padx=10)
+
+        # --- Pierwsze wyświetlenie domyślnego wykresu ---
+        self.showTrendsPlot(self.current_period)
 
         nav_frame = customtkinter.CTkFrame(self)
         nav_frame.pack(side="bottom", fill="x", pady=10, padx=10)
@@ -207,18 +216,19 @@ class Screen2(customtkinter.CTkFrame):
         btn_right.pack(side="right", anchor="se")
 
     def showTrendsPlot(self, period):
+
+        self.current_period = period
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
 
-        if period not in self.trends_cache:
-            data = CDPdata.getTrendsData(period)
-            self.trends_cache[period] = data
-        else:
-            data = self.trends_cache[period]
-            print(f"Użyto danych z pamięci ({period})")
-
+        data = CDPdata.getTrendsData(period)
         CDPplot.createTrendsPlot(self.plot_frame, period, data)
 
+    def refreshTrends(self):
+        if hasattr(self, "current_period"):
+            CDPdata.invalidate_trends_period(self.current_period)
+            self.showTrendsPlot(self.current_period)
+            
 #Ekran sprawozdań kwartalnych
 class Screen3(customtkinter.CTkFrame):
     def __init__(self, master, preloaded_data=None, preloaded_trends=None):
@@ -237,5 +247,6 @@ class Screen3(customtkinter.CTkFrame):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
