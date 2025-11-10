@@ -84,61 +84,124 @@ def getMinMaxPrice(data=None):
 
     return min_price, max_price
 
-CACHE_DIR = "cache"
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+CACHE_DIR  = os.path.join(BASE_DIR, "cache")
+CACHE_FILE = os.path.join(CACHE_DIR, "trends_cache.json")
 
 def ensure_cache_dir():
-    if not os.path.exists(CACHE_DIR):
-        os.makedirs(CACHE_DIR)
+    os.makedirs(CACHE_DIR, exist_ok=True)
 
-def getTrendsData(period):
-        
+def load_cache():
+    """Wczytaj cache; jeśli plik uszkodzony -> przenieś do *.bad.json i zwróć pusty."""
     ensure_cache_dir()
-    CACHE_FILE = os.path.join(CACHE_DIR, f"trends_{period}.json")
-    
-    # jeśli istnieje cache
-    if os.path.exists(CACHE_FILE):
+    if not os.path.exists(CACHE_FILE):
+        return {}
+    try:
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
+            txt = f.read().strip()
+            if not txt:
+                return {}
+            return json.loads(txt)
+    except Exception as e:
+        # odsuń zły plik i pozwól pobrać na nowo
+        bad_name = os.path.join(
+            CACHE_DIR,
+            f"trends_cache.bad.{int(time.time())}.json"
+        )
         try:
-            print(f"Wczytano dane Trends z pliku cache ({CACHE_FILE})")
-            with open(CACHE_FILE, "r", encoding="utf-8") as f:
-                cached = json.load(f)
-            df = pd.DataFrame.from_dict(cached)
-            df.index = pd.to_datetime(df.index)
-            return df
-        except Exception as e:
-            print(f"Nie udało się wczytać pliku cache ({e}), pobieram nowe dane...")
+            os.replace(CACHE_FILE, bad_name)
+            print(f"Uszkodzony cache przeniesiono do: {bad_name} ({e})")
+        except Exception:
+            pass
+        return {}
 
-    # Jeśli nie ma cache — pobierz z Google
-    print(f"Pobieranie danych Trends ({period}) z Google...")
-    pytrends = TrendReq(hl="pl-PL", tz=360)
+def save_cache(cache: dict):
+    """Atomowy zapis cache (do pliku tymczasowego + replace)."""
+    ensure_cache_dir()
+    tmp = CACHE_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(cache, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, CACHE_FILE)
 
+def invalidate_trends_period(period: str):
+    """Dobrowolnie: usuń z cache tylko dany okres (np. '7d'), żeby wymusić ponowne pobranie."""
+    cache = load_cache()
+    if period in cache:
+        cache.pop(period, None)
+        save_cache(cache)
+        print(f"Usunięto z cache okres: {period}")
+
+def timeframe_for(period: str) -> str:
     if period == "1d":
-        timeframe = "now 1-d"
-    elif period == "7d":
-        timeframe = "now 7-d"
-    elif period == "1m":
-        timeframe = "today 1-m"
-    else:
-        timeframe = "today 12-m"
+        return "now 1-d"
+    if period == "7d":
+        return "now 7-d"
+    if period == "1m":
+        return "today 1-m"
+    # fallback
+    return "today 3-m"
 
-    pytrends.build_payload(["CD Projekt"], cat=0, timeframe=timeframe, geo="", gprop="")
-    df = pytrends.interest_over_time()
-
-    if df.empty:
-        print("Nie udało się pobrać danych z Google Trends.")
+def df_from_entry(entry: dict) -> pd.DataFrame | None:
+    """Z enkapsulowanego wpisu cache -> DataFrame (walidacja)."""
+    if not entry or "json" not in entry:
+        return None
+    try:
+        df = pd.read_json(entry["json"], orient="split")
+        if df.empty:
+            return None
+        # porządek: jeśli jest kolumna isPartial, wyrzuć
+        if "isPartial" in df.columns:
+            df = df.drop(columns=["isPartial"])
+        return df
+    except Exception as e:
+        print(f"Błąd odczytu wpisu cache: {e}")
         return None
 
-    # Usuń kolumnę isPartial, jeśli istnieje
-    if "isPartial" in df.columns:
-        df = df.drop(columns=["isPartial"])
+def getTrendsData(period: str) -> pd.DataFrame | None:
+    """
+    Zwraca DataFrame dla 'period' z cache (jeśli OK),
+    a jeśli brak/zepsuty -> pobiera z Google i bezpiecznie zapisuje.
+    """
+    cache = load_cache()
 
-    # Zapisz do pliku cache w formacie JSON
-    df_to_save = df.copy()
-    df_to_save.index = df_to_save.index.astype(str)
+    # Spróbuj z cache
+    if period in cache:
+        df = df_from_entry(cache[period])
+        if df is not None and not df.empty:
+            print(f"Wczytano {period} z cache (wierszy: {len(df)})")
+            return df
+        else:
+            # zepsuty wpis -> usuń i kontynuuj pobieranie
+            print(f"Wpis cache dla {period} jest niepoprawny; pobieram ponownie…")
+            cache.pop(period, None)
+            save_cache(cache)
 
-    # Tu jest ważna poprawka — zapisujemy DataFrame.to_dict()
-    with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(df_to_save.to_dict(orient="index"), f, ensure_ascii=False, indent=2)
+    # Pobierz z Google
+    print(f"Pobieranie Google Trends dla: {period}")
+    pytrends = TrendReq(hl="pl-PL", tz=360)
+    timeframe = timeframe_for(period)
 
-    print(f"Zapisano dane do cache: {CACHE_FILE}")
-    return df
+    try:
+        pytrends.build_payload(["CD Projekt"], cat=0, timeframe=timeframe, geo="", gprop="")
+        df = pytrends.interest_over_time()
+        if df.empty:
+            print("Puste dane Google Trends")
+            return None
+        if "isPartial" in df.columns:
+            df = df.drop(columns=["isPartial"])
 
+        # 3) Zapisz do cache
+        entry = {
+            "period": period,
+            "timeframe": timeframe,
+            "saved_at": datetime.now().isoformat(),
+            "json": df.to_json(orient="split"),  # trzymamy jako string JSON
+        }
+        cache[period] = entry
+        save_cache(cache)
+        print(f"Zapisano {period} do cache")
+        return df
+
+    except Exception as e:
+        print(f"Błąd pobierania Trends: {e}")
+        return None
