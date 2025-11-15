@@ -39,7 +39,7 @@ class SplashScreen(customtkinter.CTk):
             data = None
             
         try:
-            trends_data = CDPdata.getTrendsData("7d")
+            trends_data = CDPdata.getTrendsData("CD Projekt","7d")
         except Exception as e:
             print("Błąd pobierania danych - trends:", e)
             trends_data=None
