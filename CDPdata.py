@@ -123,13 +123,15 @@ def save_cache(cache: dict):
         json.dump(cache, f, ensure_ascii=False, indent=2)
     os.replace(tmp, CACHE_FILE)
 
-def invalidate_trends_period(period: str):
+def invalidate_trends_period(keyword: str,period: str):
     """Dobrowolnie: usuń z cache tylko dany okres (np. '7d'), żeby wymusić ponowne pobranie."""
     cache = load_cache()
-    if period in cache:
-        cache.pop(period, None)
+    if period in cache and keyword in cache[keyword]:
+        cache[keyword].pop(period, None)
+        if not cache[keyword]:
+            cache.pop(keyword, None)
         save_cache(cache)
-        print(f"Usunięto z cache okres: {period}")
+        print(f"Usunięto cache dla: {keyword} / {period}")
 
 def timeframe_for(period: str) -> str:
     if period == "1d":
@@ -157,52 +159,58 @@ def df_from_entry(entry: dict) -> pd.DataFrame | None:
         print(f"Błąd odczytu wpisu cache: {e}")
         return None
 
-def getTrendsData(period: str) -> pd.DataFrame | None:
+def getTrendsData(keyword: str, period: str) -> pd.DataFrame | None:
     """
     Zwraca DataFrame dla 'period' z cache (jeśli OK),
     a jeśli brak/zepsuty -> pobiera z Google i bezpiecznie zapisuje.
     """
     cache = load_cache()
 
-    # Spróbuj z cache
-    if period in cache:
-        df = df_from_entry(cache[period])
-        if df is not None and not df.empty:
-            print(f"Wczytano {period} z cache (wierszy: {len(df)})")
+    if keyword in cache and period in cache[keyword]:
+        df = df_from_entry(cache[keyword][period])
+        if df is not None:
+            print(f"Wczytano z cache: {keyword} / {period} (wiersze: {len(df)})")
             return df
         else:
-            # zepsuty wpis -> usuń i kontynuuj pobieranie
-            print(f"Wpis cache dla {period} jest niepoprawny; pobieram ponownie…")
-            cache.pop(period, None)
+            # usuwamy uszkodzony wpis i zapisujemy cache bez niego
+            cache[keyword].pop(period, None)
+            if not cache[keyword]:
+                cache.pop(keyword, None)
             save_cache(cache)
+            print(f"Usunięto uszkodzony wpis cache: {keyword} / {period}")
 
-    # Pobierz z Google
-    print(f"Pobieranie Google Trends dla: {period}")
+    # Pobierz z Google (pytrends)
+    print(f"Pobieranie Google Trends: {keyword} / {period}")
     pytrends = TrendReq(hl="pl-PL", tz=360)
     timeframe = timeframe_for(period)
-
     try:
-        pytrends.build_payload(["CD Projekt"], cat=0, timeframe=timeframe, geo="", gprop="")
+        pytrends.build_payload([keyword], cat=0, timeframe=timeframe, geo="", gprop="")
         df = pytrends.interest_over_time()
         if df.empty:
-            print("Puste dane Google Trends")
+            print("Google zwróciło puste dane")
             return None
         if "isPartial" in df.columns:
             df = df.drop(columns=["isPartial"])
 
-        # 3) Zapisz do cache
+        # zapisz do cache w postaci JSON-stringa orient='split'
         entry = {
             "period": period,
             "timeframe": timeframe,
             "saved_at": datetime.now().isoformat(),
-            "json": df.to_json(orient="split"),  # trzymamy jako string JSON
+            "json": df.to_json(orient="split")
         }
-        cache[period] = entry
+        cache.setdefault(keyword, {})[period] = entry
         save_cache(cache)
-        print(f"Zapisano {period} do cache")
+        print(f"Zapisano cache: {keyword} / {period}")
         return df
 
     except Exception as e:
-        print(f"Błąd pobierania Trends: {e}")
+        print(f"Błąd pytrends/pobierania: {e}")
+        # jeśli mamy jakikolwiek stary wpis (np. inny format) spróbuj go wczytać
+        if keyword in cache:
+            for p, entry in cache[keyword].items():
+                maybe = df_from_entry(entry)
+                if maybe is not None:
+                    print("Używam zapasowego wpisu z cache (inny okres).")
+                    return maybe
         return None
-
