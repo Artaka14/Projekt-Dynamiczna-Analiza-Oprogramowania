@@ -17,13 +17,13 @@ class App(customtkinter.CTk):
         self.screen2 = Screen2(self)
         self.screen3 = Screen3(self)
 
-        self.show_frame(self.screen1)
+        self.show_frame(self.screen1, " Wykres akcji")
         self.screen1.showPlot("7d")
 
-    def show_frame(self, frame):
+    def show_frame(self, frame, text):
         for f in (self.screen1, self.screen2, self.screen3):
             f.pack_forget()
-
+            self.title("CD Projekt SA - " + text)
         frame.pack(fill="both", expand=True)
 
 #Ekran wykresu akcji
@@ -31,7 +31,6 @@ class Screen1(customtkinter.CTkFrame):
     def __init__(self, master, preloaded_data=None, preloaded_trends=None):
         super().__init__(master)
 
-        master.title("CD Projekt SA - Wykres akcji")
         self.trends_cache = preloaded_trends or {}
 
         # Główna ramka
@@ -50,10 +49,10 @@ class Screen1(customtkinter.CTkFrame):
         nav_frame = customtkinter.CTkFrame(self)
         nav_frame.pack(side="bottom", fill="x", pady=10, padx=10)
 
-        btn_left = customtkinter.CTkButton(nav_frame, text="Google Trends", command=lambda: master.show_frame(master.screen2))
+        btn_left = customtkinter.CTkButton(nav_frame, text="Google Trends", command=lambda: master.show_frame(master.screen2, "Google Trends"))
         btn_left.pack(side="left", anchor="sw")
 
-        btn_right = customtkinter.CTkButton(nav_frame, text="Sprawozdanie kwartalne", command=lambda: master.show_frame(master.screen3))
+        btn_right = customtkinter.CTkButton(nav_frame, text="Sprawozdanie kwartalne", command=lambda: master.show_frame(master.screen3, "Sprawozdanie kwartalne"))
         btn_right.pack(side="right", anchor="se")
 
         # Aktualna cena
@@ -172,7 +171,6 @@ class Screen1(customtkinter.CTkFrame):
 class Screen2(customtkinter.CTkFrame):
     def __init__(self, master, preloaded_data=None, preloaded_trends=None):
         super().__init__(master)
-        master.title("CD Projekt SA - Google Trends")
 
         self.master = master
         self.trends_data = preloaded_trends
@@ -191,16 +189,10 @@ class Screen2(customtkinter.CTkFrame):
         top_bar.pack(fill="x", pady=(10, 0))
 
         for period in ["1d", "7d", "1m"]:
-            btn = customtkinter.CTkButton(
-                top_bar, text=period, width=70,
-                command=lambda p=period: self.showTrendsPlot(p)
-            )
+            btn = customtkinter.CTkButton(top_bar, text=period, width=70,command=lambda p=period: self.showTrendsPlot(p))
             btn.pack(side="left", padx=5)
 
-        refresh_btn = customtkinter.CTkButton(
-            top_bar, text="Odśwież dane", width=100,
-            command=self.refreshTrends
-        )
+        refresh_btn = customtkinter.CTkButton(top_bar, text="Odśwież dane", width=100,command=self.refreshTrends)
         refresh_btn.pack(side="right", padx=10)
 
         # --- Pierwsze wyświetlenie domyślnego wykresu ---
@@ -209,10 +201,10 @@ class Screen2(customtkinter.CTkFrame):
         nav_frame = customtkinter.CTkFrame(self)
         nav_frame.pack(side="bottom", fill="x", pady=10, padx=10)
 
-        btn_left = customtkinter.CTkButton(nav_frame, text="Sprawozdanie kwartalne", command=lambda: master.show_frame(master.screen3))
+        btn_left = customtkinter.CTkButton(nav_frame, text="Sprawozdanie kwartalne", command=lambda: master.show_frame(master.screen3, "Sprawozdanie kwartalne"))
         btn_left.pack(side="left", anchor="sw")
 
-        btn_right = customtkinter.CTkButton(nav_frame, text="Wykres akcji", command=lambda: master.show_frame(master.screen1))
+        btn_right = customtkinter.CTkButton(nav_frame, text="Wykres akcji", command=lambda: master.show_frame(master.screen1, "Wykres akcji"))
         btn_right.pack(side="right", anchor="se")
 
     def showTrendsPlot(self, period):
@@ -233,20 +225,20 @@ class Screen2(customtkinter.CTkFrame):
 class Screen3(customtkinter.CTkFrame):
     def __init__(self, master, preloaded_data=None, preloaded_trends=None):
         super().__init__(master)
-        master.title("CD Projekt SA - Sprawozdanie kwartalne")
 
         nav_frame = customtkinter.CTkFrame(self)
         nav_frame.pack(side="bottom", fill="x", pady=10, padx=10)
 
-        btn_left = customtkinter.CTkButton(nav_frame, text="Wykres akcji", command=lambda: master.show_frame(master.screen1))
+        btn_left = customtkinter.CTkButton(nav_frame, text="Wykres akcji", command=lambda: master.show_frame(master.screen1, "Wykres akcji"))
         btn_left.pack(side="left", anchor="sw")
 
-        btn_right = customtkinter.CTkButton(nav_frame, text="Google Trends", command=lambda: master.show_frame(master.screen2))
+        btn_right = customtkinter.CTkButton(nav_frame, text="Google Trends", command=lambda: master.show_frame(master.screen2, "Google Trends"))
         btn_right.pack(side="right", anchor="se")
 
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
 
