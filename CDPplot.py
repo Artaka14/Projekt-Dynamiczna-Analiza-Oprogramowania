@@ -128,10 +128,10 @@ def createCustomDataCdpPlot(frame, start_date, end_date, data):
     canvas.draw()
     canvas.get_tk_widget().pack(fill="both", expand=True)
 
-def createTrendsPlot(frame, period, data):
+def createTrendsPlot(frame, period, data, keyword):
 
     if data is None or data.empty:
-        label = customtkinter.CTkLabel(frame, text="Nie udało się pobrać danych z Google Trends", text_color="red")
+        label = customtkinter.CTkLabel(frame, text="Nie udało się pobrać danych z Google Trends, spróbuj ponownie później", text_color="red")
         label.pack(expand=True)
         return
 
@@ -149,7 +149,18 @@ def createTrendsPlot(frame, period, data):
 
     filtered = data.loc[start:end]
 
-    ax.plot(filtered.index, filtered["CD Projekt"], label="Zainteresowanie wyszukiwań CD Projekt")
+    # upewnij się, że df ma kolumnę z keyword albo nazwa kolumny to keyword
+    col = None
+    # możliwe struktury: df has one column (search term) or column name is keyword
+    if keyword in data.columns:
+        col = keyword
+    elif data.shape[1] == 1:
+        col = data.columns[0]
+    else:
+        # spróbuj znaleźć najbardziej prawdopodobną kolumnę
+        col = data.columns[0]
+
+    ax.plot(filtered.index, filtered[col], label=f"{keyword}")
     ax.set_title("Popularność wyszukiwań (Google Trends)")
     ax.grid(True)
 
@@ -167,8 +178,5 @@ def showError(frame, message="Nie udało się pobrać danych"):
         text_color="red"
     )
     error_label.pack(expand=True)
-
-    canvas.get_tk_widget().pack(fill="both", expand=True)
-
 
 
