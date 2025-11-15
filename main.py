@@ -176,6 +176,8 @@ class Screen2(customtkinter.CTkFrame):
         self.trends_data = preloaded_trends
 
         self.trends_cache = {}  # pamięć podręczna
+        self.trend_queries = ["CD Projekt", "Cyberpunk 2077", "Wiedźmin"]
+        self.current_query = customtkinter.StringVar(value="CD Projekt")
 
          # --- Ramka na wykres Google Trends ---
         self.plot_frame = customtkinter.CTkFrame(self)
@@ -187,6 +189,14 @@ class Screen2(customtkinter.CTkFrame):
         # --- Górny pasek z przyciskami okresów i odświeżania ---
         top_bar = customtkinter.CTkFrame(self)
         top_bar.pack(fill="x", pady=(10, 0))
+
+        self.query_dropdown = customtkinter.CTkOptionMenu(
+            top_bar,
+            values=self.trend_queries,
+            variable=self.current_query,
+            command=lambda _: self.showTrendsPlot(self.current_period)
+        )
+        self.query_dropdown.pack(side="left", padx=5)
 
         for period in ["1d", "7d", "1m"]:
             btn = customtkinter.CTkButton(top_bar, text=period, width=70,command=lambda p=period: self.showTrendsPlot(p))
@@ -213,8 +223,9 @@ class Screen2(customtkinter.CTkFrame):
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
 
-        data = CDPdata.getTrendsData(period)
-        CDPplot.createTrendsPlot(self.plot_frame, period, data)
+        query = self.current_query.get()
+        data = CDPdata.getTrendsData(query, period)
+        CDPplot.createTrendsPlot(self.plot_frame, period, data, query)
 
     def refreshTrends(self):
         if hasattr(self, "current_period"):
@@ -238,6 +249,7 @@ class Screen3(customtkinter.CTkFrame):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
 
