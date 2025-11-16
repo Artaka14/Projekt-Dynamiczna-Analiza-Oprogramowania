@@ -126,13 +126,25 @@ def save_cache(cache: dict):
 def invalidate_trends_period(keyword: str,period: str):
     """Dobrowolnie: usuń z cache tylko dany okres (np. '7d'), żeby wymusić ponowne pobranie."""
     cache = load_cache()
-    if period in cache and keyword in cache[keyword]:
+    if keyword in cache and period in cache[keyword]:
         cache[keyword].pop(period, None)
         if not cache[keyword]:
             cache.pop(keyword, None)
         save_cache(cache)
         print(f"Usunięto cache dla: {keyword} / {period}")
 
+    safe_kw = keyword.replace(" ", "_").lower()
+    filename = f"cache/{safe_kw}_{period}.json"
+
+    try:
+        if os.path.exists(filename):
+            os.remove(filename)
+            print(f"Usunięto plik: {filename}")
+        else:
+            print(f"Plik już nie istnieje: {filename}")
+    except Exception as e:
+        print(f"Błąd przy usuwaniu pliku {filename}: {e}")
+              
 def timeframe_for(period: str) -> str:
     if period == "1d":
         return "now 1-d"
@@ -206,11 +218,11 @@ def getTrendsData(keyword: str, period: str) -> pd.DataFrame | None:
 
     except Exception as e:
         print(f"Błąd pytrends/pobierania: {e}")
-        # jeśli mamy jakikolwiek stary wpis (np. inny format) spróbuj go wczytać
-        if keyword in cache:
-            for p, entry in cache[keyword].items():
-                maybe = df_from_entry(entry)
-                if maybe is not None:
-                    print("Używam zapasowego wpisu z cache (inny okres).")
-                    return maybe
+        ## jeśli mamy jakikolwiek stary wpis (np. inny format) spróbuj go wczytać
+        #if keyword in cache:
+        #    for p, entry in cache[keyword].items():
+        #        maybe = df_from_entry(entry)
+        #        if maybe is not None:
+        #            print("Używam zapasowego wpisu z cache (inny okres).")
+        #            return maybe
         return None
