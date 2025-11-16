@@ -228,9 +228,20 @@ class Screen2(customtkinter.CTkFrame):
         CDPplot.createTrendsPlot(self.plot_frame, period, data, query)
 
     def refreshTrends(self):
-        if hasattr(self, "current_period"):
-            CDPdata.invalidate_trends_period(self.current_period)
-            self.showTrendsPlot(self.current_period)
+        """Usuń cache dla bieżącej pary (query, period) i pobierz na nowo."""
+        # Pobierz bieżące ustawienia
+        keyword = self.current_query.get()
+        period = self.current_period
+        
+        self.trends_cache.pop((keyword, period), None)
+        
+        try:
+            CDPdata.invalidate_trends_period(keyword, period)
+        except Exception as e:
+            print(f"Błąd przy invalidacji cache: {e}")
+    
+        # Ponowne narysowanie (które spowoduje pobranie nowych danych)
+        self.showTrendsPlot(period)
             
 #Ekran sprawozdań kwartalnych
 class Screen3(customtkinter.CTkFrame):
@@ -249,6 +260,7 @@ class Screen3(customtkinter.CTkFrame):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
 
