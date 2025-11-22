@@ -1,53 +1,48 @@
-# 📊 XD Projekt – Aplikacja do analizy kursu CD PROJEKT S.A.
+# XD PROJEKT – Aplikacja do monitorowania akcji CD PROJEKT S.A.
 
-Aplikacja napisana w Pythonie umożliwiająca analizę kursu akcji CD PROJEKT S.A. z wykorzystaniem danych z:
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![License](https://img.shields.io/badge/License-MIT-green)
+![GitHub last commit](https://img.shields.io/github/last-commit/Artaka14/Projekt-Dynamiczna-Analiza-Oprogramowania)
 
-* Yahoo Finance (yfinances)
-* Google Trends (Pytrends)
-
-Pozwala na wyświetlanie wykresów kursu z różnych zakresów czasowych oraz bieżącej ceny, a także trendów popularności związanych ze spółką.
-
----
-
-## 🚀 Funkcje
-
-✔ Splash screen z ładowaniem danych <br>
-✔ Wykres kursu z wyborem zakresu:
-
-* 1 dzień
-* 1 tydzień
-* 1 miesiąc
-* dowolny zakres dat
-
-✔ Prezentacja popularności fraz z Google Trends <br>
-✔ Możliwość porównywania trendów związanych z:
-
-* CD Projekt S.A.
-* Cyberpunk 2077
-* Wiedźmin
-
-✔ Cache danych zapisywany w JSON (zapobiega limitom API)
+XD PROJEKT to aplikacja desktopowa napisana w Pythonie, służąca do śledzenia cen akcji CD PROJEKT S.A., analizy trendów oraz pobierania raportów finansowych spółki.
 
 ---
 
-## 🧰 Wymagania
+## 🚀 Funkcjonalności
 
-Python **3.11.9**
-Wymagane biblioteki:
+* **Monitorowanie bieżącej ceny akcji CD PROJEKT S.A.**
+* **Wykresy kursu akcji** dla wybranych okresów:
 
-```
-yfinance
-matplotlib
-Pillow
-customtkinter
-CtkMessagebox
-tkcalendar
-pytrends
-```
+  * ostatni dzień
+  * ostatni tydzień
+  * ostatni miesiąc
+  * dowolny zakres wybrany z kalendarza
+* **Wykresy popularności w Google Trends** dla słów kluczowych:
 
-Instalacja zależności:
+  * `CD Projekt`
+  * `Cyberpunk 2077`
+  * `Wiedźmin`
+* **Pobieranie raportów finansowych** spółki w formacie PDF lub XLSX
+* **Cache danych** w formacie JSON, aby ograniczyć liczbę zapytań do API
 
-```
+---
+
+## ⚙️ Wymagania
+
+* **Python 3.11+**
+* Biblioteki:
+
+  * `yfinance` – pobieranie danych giełdowych
+  * `matplotlib` – generowanie wykresów
+  * `Pillow` – obsługa grafiki
+  * `customtkinter` – nowoczesny interfejs graficzny
+  * `CTkMessagebox` – obsługa okien komunikatów
+  * `tkcalendar` – wybór zakresu dat
+  * `pytrends` – integracja z Google Trends
+
+**Instalacja pakietów:**
+
+```bash
 pip install -r req.txt
 ```
 
@@ -55,83 +50,73 @@ pip install -r req.txt
 
 ## 🏗 Struktura aplikacji
 
-### **CDPdata**
-
-Obsługa pobierania danych:
-
-* `GetCdpData(period)` – pobieranie danych dla wybranego okresu
-* `getCustomCDPData(start, end)` – dane dla własnego zakresu
-* `GetCurrentPrice()` – obecna cena akcji
-* `getMinMaxPrice(data)` – minimalna i maksymalna cena
-* obsługa cache w JSON
-* pobieranie danych z Google Trends
-
-### **CDPplot**
-
-Generowanie wykresów:
-
-* wykres kursu akcji
-* wykresy trendów Google Trends
-
-### **SplashScreen**
-
-Ekran startowy i ładowanie wstępnych danych.
-
-### **App**
-
-Główne okno aplikacji i zmiana ekranów.
-
-### **Screen1**
-
-Wykres kursu akcji z opcjami zmiany zakresu.
-
-### **Screen2**
-
-Wykresy i dane z Google Trends.
+* **App** – główne okno aplikacji, zarządza ekranami
+* **Screen1** – wykresy kursu akcji
+* **Screen2** – wykresy Google Trends
+* **Screen3** – raporty finansowe
+* **CDPdata** – logika pobierania danych i cache
+* **CDPplot** – generowanie wykresów
+* **SplashScreen** – ekran startowy
 
 ---
 
-## 🆕 Najważniejsze aktualizacje
+## 📄 Dokumentacja
 
-### **16.11.2025**
-
-* dodano wykresy trendów Cyberpunk 2077 i Wiedźmin
-
-### **09.11.2025**
-
-* zapisywanie danych Google Trends w JSON
-* aplikacja podzielona na 3 ekrany
-
-### **02.11.2025**
-
-* dodano obsługę pytrends
-
-### **27.10.2025**
-
-* aplikacja dzielona na moduły
-* wprowadzono wybór własnego zakresu dat
+Pełną dokumentację aplikacji znajdziesz w folderze: [Dokumentacja](./Dokumentacja)
 
 ---
 
-## ⚠ Potencjalne problemy
+## ⚠️ Zagrożenia i rozwiązania
 
-### 🔴 Błąd 429 – Google Trends
-
-* wynika ze zbyt wielu zapytań
-* cache pozwala dalej korzystać z aplikacji
-
-### 🟠 Limity Yahoo Finance
-
-* maksymalnie ok. 2000 zapytań dziennie
-
-### 🟡 JSON
-
-* możliwe błędy odczytu i zapisu
-* wymagają obsługi wyjątków
+* **Błąd 429 Google Trends** – stosowanie cache i ograniczenie liczby zapytań
+* **Limity Yahoo Finance** – cache danych i interwały pobierania
+* **Problemy z plikami JSON** – obsługa wyjątków, backup uszkodzonych plików
+* **Bezpieczeństwo pobierania plików PDF/XLSX** – walidacja typu i rozmiaru pliku
+* **Timeouty w zapytaniach sieciowych** – ustawienie timeoutów i obsługa wyjątków
 
 ---
 
-## 📎 Autor
+## 📝 Aktualizacje
 
-Aplikacja stworzona w ramach projektu do analizy danych giełdowych i popularności w internecie.
+| Data       | Zmiany                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------ |
+| 27.10.2025 | Podział aplikacji na moduły, dodanie funkcji zakresów dat, nowe biblioteki: CTkMessagebox i tkcalendar |
+| 02.11.2025 | Integracja pytrends, obsługa wykresów Google Trends                                                    |
+| 09.11.2025 | Zapis trendów do JSON, podział aplikacji na 3 ekrany                                                   |
+| 16.11.2025 | Wykresy Google Trends dla Cyberpunk 2077 i Wiedźmina, pobieranie sprawozdań finansowych                |
+| 23.11.2025 | Poprawki w dokumentacji                                                                                |
+
+---
+
+## 💻 Uruchomienie aplikacji
+
+1. Sklonuj repozytorium:
+
+```bash
+git clone <URL_REPOZYTORIUM>
+cd <NAZWA_FOLDERU>
+```
+
+2. Zainstaluj wymagane pakiety:
+
+```bash
+pip install -r req.txt
+```
+
+3. Uruchom aplikację:
+
+```bash
+python main.py
+```
+
+---
+
+## 📬 Kontakt
+
+Autorzy projektu:
+
+* Dariusz Kołodziejczyk
+* Sebastian Bek
+* Mikołaj Maliszewski
+
 
