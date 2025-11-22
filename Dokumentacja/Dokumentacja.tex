@@ -1,0 +1,267 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\title{XD PROJEKT – Dokumentacja aplikacji}
+\author{Dariusz Kołodziejczyk, Sebastian Bek, Mikołaj Maliszewski}
+
+\begin{document}
+	\maketitle
+	
+	\section{Krótki opis}
+	Aplikacja służy do śledzenia cen akcji CD PROJEKT S.A. w wybranych okresach czasu, umożliwia prezentację wykresów oraz bieżącej ceny papierów wartościowych.
+	
+	\section{Cele i założenia projektu}
+	
+	Głównym celem aplikacji jest stworzenie narzędzia umożliwiającego użytkownikowi:
+	
+	\begin{itemize}
+		\item bieżące monitorowanie kursu akcji CD Projekt S.A.,
+		\item analizę zmian wartości w wybranych okresach czasu,
+		\item zestawienie kursu z poziomem zainteresowania w Internecie (Google Trends),
+		\item pobieranie podstawowych dokumentów finansowych udostępnianych przez spółkę.
+	\end{itemize}
+	
+	\section{Środowisko i wymagania}
+	
+	Aplikacja została stworzona w języku Python w wersji 3.11.9 i działa w środowisku graficznym opartym na bibliotece CustomTkinter.
+	
+	Do prawidłowego działania wymagane są następujące biblioteki:
+	
+	\begin{itemize}
+		\item \verb|yfinance| – pobieranie danych giełdowych z Yahoo Finance,
+		\item \verb|matplotlib| – generowanie wykresów kursu,
+		\item \verb|Pillow| – obsługa grafiki,
+		\item \verb|customtkinter| – tworzenie nowoczesnego interfejsu użytkownika,
+		\item \verb|CTkMessagebox| – obsługa okien komunikatów,
+		\item \verb|tkcalendar| – wybór zakresu dat,
+		\item \verb|pytrends| – komunikacja z Google Trends.
+	\end{itemize}
+	
+	Instalacja pakietów za pomocą pliku req.txt:
+	\begin{verbatim}
+		pip install -r req.txt
+	\end{verbatim}
+	
+	\section{Opis funkcjonalności}
+	Aplikacja realizuje następujące funkcje:
+	
+	\begin{itemize}
+		\item pobieranie aktualnej ceny akcji CD Projekt S.A.
+		\item wyświetlanie wykresów kursu z zakresu:
+		\begin{itemize}
+			\item ostatniego dnia (\verb|1d|)
+			\item ostatniego tygodnia (\verb|7d|)
+			\item ostatniego miesiąca (\verb|1m|)
+			\item dowolnego zakresu wybranego z kalendarza
+		\end{itemize}
+		\item pobieranie i prezentacja wykresów z Google Trends z zakresu:
+		\begin{itemize}
+			\item ostatniego dnia (\verb|1d|)
+			\item ostatniego tygodnia (\verb|7d|)
+			\item ostatniego miesiąca (\verb|1m|)
+		\end{itemize}
+		\item możliwość wyboru słowa kluczowego (np. CD Projekt'', Cyberpunk 2077'', ``Wiedźmin'')
+		\item możliwość pobierania raportów finansowych spółki w formacie PDF lub XLSX
+		\item zapisywanie pobranych danych w pamięci podręcznej (cache), aby zmniejszyć liczbę zapytań do API
+	\end{itemize}
+	
+	\section{Struktura kodu}
+	
+	Aplikacja podzielona jest na moduły logiczne zgodnie z zasadą rozdziału odpowiedzialności.
+	
+	\subsection{Główna klasa aplikacji – \texttt{App}}
+	Klasa ta inicjalizuje wszystkie ekrany aplikacji oraz zarządza ich wyświetlaniem. Po uruchomieniu programu użytkownik widzi ekran wykresu kursu akcji.
+	
+	\subsection{Ekran wykresów giełdowych – \texttt{Screen1}}
+	Odpowiada za:
+	
+	\begin{itemize}
+		\item wyświetlanie wykresu kursu,
+		\item wybór zakresu danych (1 dzień, 1 tydzień, 1 miesiąc),
+		\item podawanie zakresu użytkownika za pomocą kalendarza,
+		\item aktualizację:
+		\begin{itemize}
+			\item bieżącej ceny akcji,
+			\item minimalnej i maksymalnej ceny w zakresie.
+		\end{itemize}
+	\end{itemize}
+	
+	\subsection{Ekran Google Trends – \texttt{Screen2}}
+	Udostępnia:
+	
+	\begin{itemize}
+		\item wybór słowa kluczowego (np. CD Projekt, Wiedźmin),
+		\item wygenerowanie wykresu popularności,
+		\item odświeżanie danych,
+		\item wykorzystanie cache w celu minimalizacji obciążenia API.
+	\end{itemize}
+	
+	\subsection{Ekran sprawozdań – \texttt{Screen3}}
+	Pozwala na:
+	
+	\begin{itemize}
+		\item wybór kwartału z listy raportów,
+		\item pobranie:
+		\begin{itemize}
+			\item raportu finansowego PDF,
+			\item raportu XLSX z wynikami finansowymi,
+			\item informacji prasowej w PDF.
+		\end{itemize}
+	\end{itemize}
+	
+	\subsection{Moduł danych – \texttt{CDPdata}}
+	Zawiera logikę:
+	
+	\begin{itemize}
+		\item pobierania danych z Yahoo Finance,
+		\item obsługi Google Trends poprzez PyTrends,
+		\item zapisu i wczytywania cache w formacie JSON.
+	\end{itemize}
+	
+	\subsection{Moduł wykresów – \texttt{CDPplot}}
+	Odpowiada za renderowanie wykresów biblioteki matplotlib i osadzanie ich w komponentach interfejsu.
+	
+	\subsection{SplashScreen}
+	Odpowiada za wyświetlanie startowego ekranu i ładowanie danych przed uruchomieniem aplikacji.
+	
+	\subsection{App}
+	Główne okno aplikacji, odpowiedzialne za przełączanie ekranów.
+	
+	\subsection{Screen1}
+	Ekran obsługujący wykresy kursu giełdowego.
+	
+	\subsection{Screen2}
+	Obsługuje wykresy danych z Google Trends.
+	
+	\subsection{Screen3}
+	Obsługuje dane z sprawozdań kwartalnych CD Projekt S.A.
+	
+	\section {Opisy funkcji}
+	
+	\subsection*{CDPdata}
+	\begin{itemize}
+		\item \textbf{GetCdpData(period)} - pobiera dane o kursie z serwisu Yahoo Finance (yfinance) dla danego okresu
+		\item \textbf{getCustomCDPData(start\_time, end\_time)} - pobiera dane o kursie dla wybranego przez użytkownika zakresu
+		\item \textbf{GetCurrentPrice()} - pobiera i wyświetla aktualną cenę akcji
+		\item \textbf{getMinMaxPrice(data)} - pobiera najniższą i najwyższą cenę w danym zakresie
+		\item \textbf{ensure\_cache\_dir()} - upewnia się że istnieje folder plików JSON jeśli nie tworzy go
+		\item \textbf{load\_cache()} - wczytuje cache a jeśli plik jest uszkodzony zwraca pusty
+		\item \textbf{save\_cache(cache)} - zapisuje dane do pliku JSON
+		\item \textbf{invalidate\_trends\_plot(keyword, period)} - usuwa cache przy odświeżaniu wykresów
+		\item \textbf{timeframe\_for(period)} - zamienia nazwy okresów na te używane przez pytrends
+		\item \textbf{df\_from\_entry(entry)} - tworzy DataFrame ze wczytanego cache
+		\item \textbf{getTrendsData(period)} - wczytuje dane z pliku JSON a jeśli nie ma pobiera dane z Google Trends
+	\end{itemize}
+	
+	\subsection*{CDPplot}
+	\begin{itemize}
+		\item \textbf{CreateCdpPlot(frame, period)} - tworzy i wyświetla wykres cen
+		\item \textbf{createCustomDataCdpPlot(frame, start\_date, end\_date, data)} - tworzy wykres dla wybranego przez użytkownika zakresu
+		\item \textbf{createTrendsPlot(frame, period, data, keyword)} - tworzy wykres zainteresowania z Google Trends
+	\end{itemize}
+	
+	\subsection*{SplashScreen}
+	\begin{itemize}
+		\item \_\_init\_\_(self) - ustawia wysokość szerokość i zawartość splash screena
+		\item center\_x(self, window\_width), center\_y(self, window\_width) - pomocnicze funkcje do ustawienia splash screena na środku ekranu
+		\item load\_data\_with\_delay(self) - pobiera dane podczas splash screena i czeka co najmniej 2,5 sekundy
+		\item open\_main\_app(self, data) - zamyka splash screen i otwiera główne okno aplikacji
+	\end{itemize}
+	
+	\subsection*{App}
+	\begin{itemize}
+		\item \_\_init\_\_(self, master, preloaded\_data, preloaded\_trends) - ustawia wysokość szerokość i zawartość głównego okna aplikacji
+		\item showFrame(self, frame, text) - zmienia widoczny ekran i nazwę aplikacji
+	\end{itemize}
+	
+	\subsection*{Screen1}
+	\begin{itemize}
+		\item \_\_init\_\_(self, master, preloaded\_data, preloaded\_trends) - ustawia ramki okna wykresu akcji
+		\item showPlot(self, period) - aktualizuje wykres po kliknięciu któregoś z przycisków
+		\item showCustomDatePlot(self) - aktualizuje wykres po wpisaniu własnego zakresu
+		\item updatePriceLabel(self) - aktualizuje cenę po kliknięciu przycisku
+		\item updateMinMaxLabels(self, data) - aktualizuje min i max ceny po kliknięciu przycisku
+		\item showError(self, title, message, icon) - pokazuje okienko z błędem
+	\end{itemize}
+	
+	\subsection*{Screen2}
+	\begin{itemize}
+		\item \_\_init\_\_(self, master, preloaded\_data, preloaded\_trends) - ustawia okna wykresów Google Trends
+		\item showTrendsPlot(self, period) - tworzy wykres dla Google Trends z określonego zakresu
+		\item refreshTrends(self) - odświeża dane używane do rysowania wykresu Google Trends
+	\end{itemize}
+	
+	\section{Zagrożenia}
+	
+	\subsection{Błąd 429 Google Trends}
+	Wynika z zbyt dużej liczby zapytań do serwisu Google Trends w krótkim czasie.\\
+	\textbf{Rozwiązanie:} korzystanie z zapisanych danych w JSON (cache) oraz ograniczenie liczby zapytań
+	
+	\subsection{Blokowanie Yahoo Finance}
+	Serwis Yahoo Finance wprowadza dzienne limity około 2000 zapytań na IP\\
+	\textbf{Rozwiązanie:} ograniczanie częstotliwości zapytań, cache danych historycznych oraz stosowanie interwałów
+	
+	\subsection{Obsługa plików JSON (cache)}
+	Możliwe błędy serializacji i deserializacji, np. uszkodzony plik JSON lub niepoprawny format danych\\
+	\textbf{Rozwiązanie:} obsługa wyjątków przy wczytywaniu i zapisie JSON, atomowy zapis do pliku tymczasowego, backup uszkodzonego pliku
+	
+	\subsection{Path traversal w cache}
+	Niepoprawnie sformatowane słowa kluczowe mogą prowadzić do zapisania/usunięcia plików poza katalogiem cache\\
+	\textbf{Rozwiązanie:} sanitacja słów kluczowych (tylko litery, cyfry i podkreślenia), użycie \texttt{os.path.basename} oraz bezpieczne tworzenie nazw plików
+	
+	\subsection{Pobieranie plików z internetu}
+	Pobieranie plików PDF/XLSX bez weryfikacji rozszerzenia, MIME type czy rozmiaru może prowadzić do pobrania złośliwego pliku\\
+	\textbf{Rozwiązanie:} sprawdzanie typu i rozmiaru pliku, obsługa wyjątków, zapis w bezpiecznym folderze
+	
+	\subsection{Brak timeoutów w zapytaniach sieciowych}
+	Funkcje \texttt{requests.get}, \texttt{yfinance.download} i Google Trends mogą blokować aplikację przy problemach sieciowych\\
+	\textbf{Rozwiązanie:} ustawienie timeoutów i obsługa wyjątków przy pobieraniu danych
+	
+	\subsection{Duże rozmiary danych}
+	Pobieranie dużych zbiorów danych (Google Trends, Yahoo Finance) może prowadzić do problemów z pamięcią\\
+	\textbf{Rozwiązanie:} ograniczenie liczby pobieranych danych
+	lub filtrowanie niepotrzebnych kolumn
+	
+	\subsection{Interfejs użytkownika}
+	Brak pełnej kontroli nad ścieżką folderu wyboru w Tkinter może prowadzić do zapisu w systemowych katalogach\\
+	\textbf{Rozwiązanie:} domyślny folder w katalogu aplikacji oraz walidacja ścieżki
+	
+	\section{Aktualizacje}
+	
+	\subsection*{27.10.2025}
+	\begin{itemize}
+		\item Podział aplikacji na moduły
+		\item Dodanie funkcji do obsługi zakresów dat
+		\item Nowe biblioteki: CtkMessagebox i tkcalendar
+	\end{itemize}
+	
+	\subsection*{02.11.2025}
+	\begin{itemize}
+		\item Dodano pytrends
+		\item Obsługa wykresów Google Trends
+	\end{itemize}
+	
+	\subsection*{09.11.2025}
+	\begin{itemize}
+		\item Dodano obsługę zapisu trendów do JSON
+		\item Podział aplikacji na 3 ekrany
+	\end{itemize}
+	
+	\subsection*{16.11.2025}
+	\begin{itemize}
+		\item Dodano wykresy Google Trends dla Cyberpunk 2077 i Wiedźmin
+		\item Dodano pobieranie sprawozdań finansowych CD Projekt SA
+	\end{itemize}
+	\subsection*{23.11.2025}
+	\begin{itemize}
+		\item Poprawienie dokumentacji
+	\end{itemize}
+	
+\end{document}
