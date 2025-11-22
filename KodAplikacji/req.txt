@@ -1,0 +1,9 @@
+yfinance>=0.2.29
+matplotlib>=3.8.0
+pandas>=2.1.0
+Pillow>=10.0.0
+customtkinter>=5.0.0
+ctkmessagebox>=2.7.0
+babel>=2.17.0
+tkcalendar>=1.6.1
+pytrends>=4.9.2
