@@ -1,8 +1,12 @@
-﻿import yfinance as yf
+import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 from pytrends.request import TrendReq
 import json, os, time
+import os
+import requests
+import tkinter as tk
+from tkinter import filedialog
 
 #Funkcja, która zdobywa informacje o kursie CDPu do wykresu
 def getCdpData(period): 
@@ -32,7 +36,7 @@ def getCdpData(period):
 
     return data
 
-#Funkcja, która zdobywa informacje o kursie CDPu dla customowej daty wybranej przez użytkownika
+#Funkcja, która zdobywa informacje o kursie CDPu dla customowej daty wybranej przez u¿ytkownika
 def getCustomCdpData(start_time, end_time): 
 
     if end_time.weekday() >= 5: 
@@ -84,7 +88,6 @@ def getMinMaxPrice(data=None):
 
     return min_price, max_price
 
-#Funkcja znajdująca trendy
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 CACHE_DIR  = os.path.join(BASE_DIR, "cache")
 CACHE_FILE = os.path.join(CACHE_DIR, "trends_cache.json")
@@ -92,8 +95,9 @@ CACHE_FILE = os.path.join(CACHE_DIR, "trends_cache.json")
 def ensure_cache_dir():
     os.makedirs(CACHE_DIR, exist_ok=True)
 
+#Wczytuje cache, jeśli plik uszkodzony -> przenosi do *.bad.json i zwraca pusty
 def load_cache():
-    """Wczytaj cache; jeśli plik uszkodzony -> przenieś do *.bad.json i zwróć pusty."""
+    
     ensure_cache_dir()
     if not os.path.exists(CACHE_FILE):
         return {}
@@ -116,16 +120,16 @@ def load_cache():
             pass
         return {}
 
+#Atomowy zapis cache (do pliku tymczasowego + replace)
 def save_cache(cache: dict):
-    """Atomowy zapis cache (do pliku tymczasowego + replace)."""
     ensure_cache_dir()
     tmp = CACHE_FILE + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(cache, f, ensure_ascii=False, indent=2)
     os.replace(tmp, CACHE_FILE)
 
+#Usuwa z cache tylko dany okres (np. '7d'), żeby wymusić ponowne pobranie
 def invalidate_trends_period(keyword: str,period: str):
-    """Dobrowolnie: usuń z cache tylko dany okres (np. '7d'), żeby wymusić ponowne pobranie."""
     cache = load_cache()
     if keyword in cache and period in cache[keyword]:
         cache[keyword].pop(period, None)
@@ -145,7 +149,7 @@ def invalidate_trends_period(keyword: str,period: str):
             print(f"Plik już nie istnieje: {filename}")
     except Exception as e:
         print(f"Błąd przy usuwaniu pliku {filename}: {e}")
-
+              
 def timeframe_for(period: str) -> str:
     if period == "1d":
         return "now 1-d"
@@ -156,8 +160,8 @@ def timeframe_for(period: str) -> str:
     # fallback
     return "today 3-m"
 
+#Z enkapsulowanego wpisu cache -> DataFrame (walidacja)
 def df_from_entry(entry: dict) -> pd.DataFrame | None:
-    """Z enkapsulowanego wpisu cache -> DataFrame (walidacja)."""
     if not entry or "json" not in entry:
         return None
     try:
@@ -172,11 +176,8 @@ def df_from_entry(entry: dict) -> pd.DataFrame | None:
         print(f"Błąd odczytu wpisu cache: {e}")
         return None
 
+#Zwraca DataFrame dla 'period' z cache (jeśli OK),a jeśli brak/zepsuty -> pobiera z Google i bezpiecznie zapisuje
 def getTrendsData(keyword: str, period: str) -> pd.DataFrame | None:
-    """
-    Zwraca DataFrame dla 'period' z cache (jeśli OK),
-    a jeśli brak/zepsuty -> pobiera z Google i bezpiecznie zapisuje.
-    """
     cache = load_cache()
 
     if keyword in cache and period in cache[keyword]:
@@ -192,7 +193,7 @@ def getTrendsData(keyword: str, period: str) -> pd.DataFrame | None:
             save_cache(cache)
             print(f"Usunięto uszkodzony wpis cache: {keyword} / {period}")
 
-    # Pobierz z Google (pytrends)
+    #Pobieranie z Google (pytrends)
     print(f"Pobieranie Google Trends: {keyword} / {period}")
     pytrends = TrendReq(hl="pl-PL", tz=360)
     timeframe = timeframe_for(period)
@@ -205,7 +206,7 @@ def getTrendsData(keyword: str, period: str) -> pd.DataFrame | None:
         if "isPartial" in df.columns:
             df = df.drop(columns=["isPartial"])
 
-        # zapisz do cache w postaci JSON-stringa orient='split'
+        #Zapisywanie do cache w postaci JSON-stringa orient='split'
         entry = {
             "period": period,
             "timeframe": timeframe,
@@ -219,11 +220,131 @@ def getTrendsData(keyword: str, period: str) -> pd.DataFrame | None:
 
     except Exception as e:
         print(f"Błąd pytrends/pobierania: {e}")
-        ## jeśli mamy jakikolwiek stary wpis (np. inny format) spróbuj go wczytać
-        #if keyword in cache:
-        #    for p, entry in cache[keyword].items():
-        #        maybe = df_from_entry(entry)
-        #        if maybe is not None:
-        #            print("Używam zapasowego wpisu z cache (inny okres).")
-        #            return maybe
         return None
+
+# SŁOWNIK KWARTAŁÓW
+QUARTER_REPORTS = {
+    "I 2025": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/05/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-i-kwartal-2025-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/05/podstawowe-dane-finansowe-q1-2025.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/05/informacja-prasowa-wyniki-q1-2025.pdf"
+    },
+    "III 2024": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2024-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/11/podstawowe-dane-finansowe-q3-2024.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/11/informacja-prasowa-wyniki-q3-2024.pdf"
+    },
+    "I 2024": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-i-kwartal-2024-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/podstawowe-dane-finansowe-q1-2024.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/informacja-prasowa-wyniki-q1-2024.pdf"
+    },
+    "III 2023": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2023-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/11/podstawowe-dane-finansowe-q3-2023.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/11/informacja-prasowa-wyniki-q3-2023.pdf"
+    },
+    "I 2023": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/skonsolidowane-sprawozdanie-finansowe-grupy-cd-projekt-za-q1-2023.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/podstawowe-dane-finansowe-q1-2023.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/informacja-prasowa-wyniki-q1-2023.pdf"
+    },
+    "III 2022": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2022-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/11/podstawowe-dane-finansowe-q3-2022.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/11/informacja-prasowa-wyniki-q3-2022.pdf"
+    },
+    "I 2022": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/sf-skonsolidowane-q1-2022.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/podstawowe-dane-finansowe-q1-2022.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/informacja-prasowa-wyniki-q1-2022.pdf"
+    },
+    "III 2021": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/11/skonsolidowane-sprawozdanie-finansowe-za-iii-kwartal-2021-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/11/podstawowe-dane-finansowe-q3-2021.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/11/informacja-prasowa-wyniki-q3-2021.pdf"
+    },
+    "I 2021": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/srodroczne-skrocone-skonsolidowane-sprawozdanie-finansowe-za-i-kw-2021.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/podstawowe-dane-finansowe-q1-2021-1.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/informacja-prasowa-wyniki-q1-2021.pdf"
+    },
+    "III 2020": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/11/spr_fin_skons_-q3_2020.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/04/podstawowe-dane-finansowe-q3-2020.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/11/informacja-prasowa-wyniki-za-iii-kwartal-2020-r.pdf"
+    },
+    "I 2020": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-1-kw-2020-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/podstawowe-dane-finansowe_q1-2020.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/press-q1_pl.pdf"
+    },
+    "III 2019": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2019-r-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/podstawowe-dane-finansowe_q3-2019.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/informacja-prasowa-wyniki-q3-2019.pdf"
+    },
+    "I 2019": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/05/spr_fin_-q1_2019_signed-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/05/podstawowe-dane-finansowe_q1-2019.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/05/grupa-cd-projekt-podsumowuje-poczatek-roku-informacja-prasowa.pdf"
+    },
+    "III 2018": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/srodroczne-skrocone-skonsolidowane-sprawozdanie-finansowe-za-3-kw-2018-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/podstawowe-dane-finansowe_q3-2018-1.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/cd-projekt-podsumowuje-trzeci-kwartal-2018-r-1.pdf"
+    },
+    "I 2018": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/05/spr_fin_-q1_2018-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/05/podstawowe-dane-finansowe_q1-2018.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/05/informacja-prasowa_pl.pdf"
+    },
+    "III 2017": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/11/spr_fin_skons_-q3_2017-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/01/podstawowe-dane-finansowe_3q2017.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/11/grupa-cd-projekt-informacja-prasowa-3q-2017.pdf"
+    },
+    "I 2017": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/05/2017_qsr1_spraw-2.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/01/podstawowe-dane-finansowe-2017q1.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/05/1q-2017-cd-projekt-informacja-prasowa.pdf"
+    },
+    "III 2016": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/skonsolidowane-sprawozdanie-finansowe_q3-2016.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/podstawowe_dane_finansowe_2016q3.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/wysoka-sprzedazcc87-gry-wiedzmin-3-dziki-gon-i-dodatkow-napecca8dza-wyniki-grupy-cd-projekt-informacja-prasowa.pdf"
+    },
+    "I 2016": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/05/2016_qsr1_spraw.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/05/podstawowe-dane-firnsowe-w-xls-1-kw-2016-r.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/05/20160512-cd-projekt-publikuje-solidne-wyniki-za-pierwszy-kwartal-2016-roku-informacja-prasowa.pdf"
+    }
+}
+
+#FUNKCJE
+
+#Wyświetla okno wyboru folderu i zwraca jego ścieżkę
+def choose_folder() -> str:
+    root = tk.Tk()
+    root.withdraw()
+    folder = filedialog.askdirectory(title="Wybierz folder do pobierania raportów")
+    root.destroy()
+    if not folder:
+        folder = os.path.join(os.path.dirname(__file__), "downloads")
+        os.makedirs(folder, exist_ok=True)
+    return folder
+
+# Pobiera plik z internetu do folderu wybranego przez użytkownika
+def download_file(url: str, default_name: str) -> str:
+    folder = choose_folder()
+    path = os.path.join(folder, default_name)
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        with open(path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        return path
+    except Exception as e:
+        print(f"Błąd pobierania {url}: {e}")
+        return ""
