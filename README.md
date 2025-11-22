@@ -11,7 +11,7 @@ Pozwala na wyświetlanie wykresów kursu z różnych zakresów czasowych oraz bi
 
 ## 🚀 Funkcje
 
-✔ Splash screen z ładowaniem danych
+✔ Splash screen z ładowaniem danych <br>
 ✔ Wykres kursu z wyborem zakresu:
 
 * 1 dzień
@@ -19,7 +19,7 @@ Pozwala na wyświetlanie wykresów kursu z różnych zakresów czasowych oraz bi
 * 1 miesiąc
 * dowolny zakres dat
 
-✔ Prezentacja popularności fraz z Google Trends
+✔ Prezentacja popularności fraz z Google Trends <br>
 ✔ Możliwość porównywania trendów związanych z:
 
 * CD Projekt S.A.
