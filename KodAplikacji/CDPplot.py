@@ -159,7 +159,7 @@ def createTrendsPlot(frame, period, data, keyword):
         col = data.columns[0]
 
     ax.plot(filtered.index, filtered[col], label=f"{keyword}")
-    ax.set_title("Popularność wyszukiwań (Google Trends)")
+    ax.set_title("Popularność hasła "+ keyword +" wśród wyszukiwań (Google Trends)")
     ax.grid(True)
 
     canvas = FigureCanvasTkAgg(fig, master=frame)
@@ -175,4 +175,5 @@ def showError(frame, message="Nie udało się pobrać danych"):
         font=("Arial", 16, "bold"),
         text_color="red"
     )
+
     error_label.pack(expand=True)
