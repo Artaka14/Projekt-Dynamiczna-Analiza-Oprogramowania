@@ -158,19 +158,7 @@
 	
 	\subsection{SplashScreen}
 	Odpowiada za wyświetlanie startowego ekranu i ładowanie danych przed uruchomieniem aplikacji.
-	
-	\subsection{App}
-	Główne okno aplikacji, odpowiedzialne za przełączanie ekranów.
-	
-	\subsection{Screen1}
-	Ekran obsługujący wykresy kursu giełdowego.
-	
-	\subsection{Screen2}
-	Obsługuje wykresy danych z Google Trends.
-	
-	\subsection{Screen3}
-	Obsługuje dane z sprawozdań kwartalnych CD Projekt S.A.
-	
+
 	\section {Opisy funkcji}
 	
 	\subsection*{CDPdata}
@@ -186,6 +174,8 @@
 		\item \textbf{timeframe\_for(period)} - zamienia nazwy okresów na te używane przez pytrends
 		\item \textbf{df\_from\_entry(entry)} - tworzy DataFrame ze wczytanego cache
 		\item \textbf{getTrendsData(period)} - wczytuje dane z pliku JSON a jeśli nie ma pobiera dane z Google Trends
+		\item \textbf{choose\_folder()} - wyświetla okno wyboru folderu do jakiego ma zostać zapisany wybrany przez użytkownika plik
+		\item \textbf{download\_file(url: str, default\_name: str)} - pobiera plik z internetu do wybranego przez użytkownika folderu
 	\end{itemize}
 	
 	\subsection*{CDPplot}
@@ -197,34 +187,45 @@
 	
 	\subsection*{SplashScreen}
 	\begin{itemize}
-		\item \_\_init\_\_(self) - ustawia wysokość szerokość i zawartość splash screena
-		\item center\_x(self, window\_width), center\_y(self, window\_width) - pomocnicze funkcje do ustawienia splash screena na środku ekranu
-		\item load\_data\_with\_delay(self) - pobiera dane podczas splash screena i czeka co najmniej 2,5 sekundy
-		\item open\_main\_app(self, data) - zamyka splash screen i otwiera główne okno aplikacji
+		\item \textbf{\_\_init\_\_(self)} - ustawia wysokość szerokość i zawartość splash screena
+		\item \textbf{center\_x(self, window\_width)}, \textbf{center\_y(self, window\_width)} - pomocnicze funkcje do ustawienia splash screena na środku ekranu
+		\item \textbf{load\_data\_with\_delay(self)} - pobiera dane podczas splash screena i czeka co najmniej 2,5 sekundy
+		\item \textbf{open\_main\_app(self, data)} - zamyka splash screen i otwiera główne okno aplikacji
 	\end{itemize}
 	
 	\subsection*{App}
 	\begin{itemize}
-		\item \_\_init\_\_(self, master, preloaded\_data, preloaded\_trends) - ustawia wysokość szerokość i zawartość głównego okna aplikacji
-		\item showFrame(self, frame, text) - zmienia widoczny ekran i nazwę aplikacji
+		\item \textbf{\_\_init\_\_(self, master, preloaded\_data, preloaded\_trends)} - ustawia wysokość szerokość i zawartość głównego okna aplikacji
+		\item \textbf{showFrame(self, frame, text)} - zmienia widoczny ekran i nazwę aplikacji
 	\end{itemize}
 	
 	\subsection*{Screen1}
 	\begin{itemize}
-		\item \_\_init\_\_(self, master, preloaded\_data, preloaded\_trends) - ustawia ramki okna wykresu akcji
-		\item showPlot(self, period) - aktualizuje wykres po kliknięciu któregoś z przycisków
-		\item showCustomDatePlot(self) - aktualizuje wykres po wpisaniu własnego zakresu
-		\item updatePriceLabel(self) - aktualizuje cenę po kliknięciu przycisku
-		\item updateMinMaxLabels(self, data) - aktualizuje min i max ceny po kliknięciu przycisku
-		\item showError(self, title, message, icon) - pokazuje okienko z błędem
+		\item \textbf{\_\_init\_\_(self, master, preloaded\_data, preloaded\_trends)} - ustawia ramki okna wykresu akcji
+		\item \textbf{showPlot(self, period)} - aktualizuje wykres po kliknięciu któregoś z przycisków
+		\item \textbf{showCustomDatePlot(self)} - aktualizuje wykres po wpisaniu własnego zakresu
+		\item \textbf{updatePriceLabel(self)} - aktualizuje cenę po kliknięciu przycisku
+		\item \textbf{updateMinMaxLabels(self, data)} - aktualizuje min i max ceny po kliknięciu przycisku
+		\item \textbf{showError(self, title, message, icon)} - pokazuje okienko z błędem
 	\end{itemize}
 	
 	\subsection*{Screen2}
 	\begin{itemize}
-		\item \_\_init\_\_(self, master, preloaded\_data, preloaded\_trends) - ustawia okna wykresów Google Trends
-		\item showTrendsPlot(self, period) - tworzy wykres dla Google Trends z określonego zakresu
-		\item refreshTrends(self) - odświeża dane używane do rysowania wykresu Google Trends
+		\item \textbf{\_\_init\_\_(self, master, preloaded\_data, preloaded\_trends)} - ustawia ramki okna wykresów Google Trends
+		\item \textbf{showTrendsPlot(self, period)} - tworzy wykres dla Google Trends z określonego zakresu
+		\item \textbf{refreshTrends(self)} - odświeża dane używane do rysowania wykresu Google Trends
 	\end{itemize}
+	
+	\subsection*{Screen3}
+	\begin{itemize}
+		\item \textbf{\_\_init\_\_(self, master, preloaded\_data, preloaded\_trends)} - ustawia ramki okna służącego do obsługi sprawozdań kwartalnych
+		\item \textbf{download\_pdf(self)} - pobiera plik PDF
+		\item \textbf{download\_xlsx(self)} - pobiera plik XLSX
+		\item \textbf{download\_press\_pdf(self)} - pobiera dane prasowe w formacie PDF
+	\end{itemize}
+	
+	
+	
 	
 	\section{Zagrożenia}
 	
