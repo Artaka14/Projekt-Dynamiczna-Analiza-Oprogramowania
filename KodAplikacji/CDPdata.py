@@ -226,13 +226,13 @@ def getTrendsData(keyword: str, period: str) -> pd.DataFrame | None:
 QUARTER_REPORTS = {
     # ===== 2025 =====
     "III 2025": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2025-r.pdf"
-        "xslx":"https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/podstawowe-dane-finansowe-q3-2025.xlsx"
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2025-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/podstawowe-dane-finansowe-q3-2025.xlsx",
         "press_pdf" : "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/informacja-prasowa-wyniki-q3-2025.pdf"
     },
     "I 2025": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2025-r.pdf"
-        "xslx":"https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/podstawowe-dane-finansowe-q3-2025.xlsx"
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2025-r.pdf",
+        "xlsx":"https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/podstawowe-dane-finansowe-q3-2025.xlsx",
         "press_pdf" : "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/informacja-prasowa-wyniki-q3-2025.pdf"
     },
     "II 2025": {
@@ -466,4 +466,5 @@ def download_file(url: str, default_name: str) -> str:
     except Exception as e:
         print(f"Błąd pobierania {url}: {e}")
         return ""
+
 
