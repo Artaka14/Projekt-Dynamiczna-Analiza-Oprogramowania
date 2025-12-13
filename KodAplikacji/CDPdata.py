@@ -224,103 +224,221 @@ def getTrendsData(keyword: str, period: str) -> pd.DataFrame | None:
 
 # SŁOWNIK KWARTAŁÓW
 QUARTER_REPORTS = {
+    # ===== 2025 =====
+    "III 2025": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2025-r.pdf"
+        "xslx":"https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/podstawowe-dane-finansowe-q3-2025.xlsx"
+        "press_pdf" : "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/informacja-prasowa-wyniki-q3-2025.pdf"
+    },
     "I 2025": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2025-r.pdf"
+        "xslx":"https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/podstawowe-dane-finansowe-q3-2025.xlsx"
+        "press_pdf" : "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/11/informacja-prasowa-wyniki-q3-2025.pdf"
+    },
+    "II 2025": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/05/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-i-kwartal-2025-r.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/05/podstawowe-dane-finansowe-q1-2025.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2025/05/informacja-prasowa-wyniki-q1-2025.pdf"
+    },
+
+    # ===== 2024 =====
+    "I 2024": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-i-kwartal-2024-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/podstawowe-dane-finansowe-q1-2024.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/informacja-prasowa-wyniki-q1-2024.pdf"
+    },
+    "II 2024": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-i-kwartal-2024-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/podstawowe-dane-finansowe-q1-2024.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/informacja-prasowa-wyniki-q1-2024.pdf"
     },
     "III 2024": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2024-r.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/11/podstawowe-dane-finansowe-q3-2024.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/11/informacja-prasowa-wyniki-q3-2024.pdf"
     },
-    "I 2024": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-i-kwartal-2024-r.pdf",
-        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/podstawowe-dane-finansowe-q1-2024.xlsx",
-        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/05/informacja-prasowa-wyniki-q1-2024.pdf"
+    "IV 2024": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2024-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/11/podstawowe-dane-finansowe-q3-2024.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2024/11/informacja-prasowa-wyniki-q3-2024.pdf"
+    },
+
+    # ===== 2023 =====
+    "I 2023": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/skonsolidowane-sprawozdanie-finansowe-grupy-cd-projekt-za-q1-2023.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/podstawowe-dane-finansowe-q1-2023.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/informacja-prasowa-wyniki-q1-2023.pdf"
+    },
+    "II 2023": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/skonsolidowane-sprawozdanie-finansowe-grupy-cd-projekt-za-q1-2023.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/podstawowe-dane-finansowe-q1-2023.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/informacja-prasowa-wyniki-q1-2023.pdf"
     },
     "III 2023": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2023-r.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/11/podstawowe-dane-finansowe-q3-2023.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/11/informacja-prasowa-wyniki-q3-2023.pdf"
     },
-    "I 2023": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/skonsolidowane-sprawozdanie-finansowe-grupy-cd-projekt-za-q1-2023.pdf",
-        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/podstawowe-dane-finansowe-q1-2023.xlsx",
-        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/05/informacja-prasowa-wyniki-q1-2023.pdf"
+    "IV 2023": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2023-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/11/podstawowe-dane-finansowe-q3-2023.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2023/11/informacja-prasowa-wyniki-q3-2023.pdf"
+    },
+
+    # ===== 2022 =====
+    "I 2022": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/sf-skonsolidowane-q1-2022.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/podstawowe-dane-finansowe-q1-2022.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/informacja-prasowa-wyniki-q1-2022.pdf"
+    },
+    "II 2022": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/sf-skonsolidowane-q1-2022.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/podstawowe-dane-finansowe-q1-2022.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/informacja-prasowa-wyniki-q1-2022.pdf"
     },
     "III 2022": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2022-r.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/11/podstawowe-dane-finansowe-q3-2022.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/11/informacja-prasowa-wyniki-q3-2022.pdf"
     },
-    "I 2022": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/sf-skonsolidowane-q1-2022.pdf",
-        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/podstawowe-dane-finansowe-q1-2022.xlsx",
-        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/05/informacja-prasowa-wyniki-q1-2022.pdf"
+    "IV 2022": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/11/skonsolidowane-sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2022-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/11/podstawowe-dane-finansowe-q3-2022.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2022/11/informacja-prasowa-wyniki-q3-2022.pdf"
+    },
+
+    # ===== 2021 =====
+    "I 2021": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/srodroczne-skrocone-skonsolidowane-sprawozdanie-finansowe-za-i-kw-2021.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/podstawowe-dane-finansowe-q1-2021-1.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/informacja-prasowa-wyniki-q1-2021.pdf"
+    },
+    "II 2021": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/srodroczne-skrocone-skonsolidowane-sprawozdanie-finansowe-za-i-kw-2021.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/podstawowe-dane-finansowe-q1-2021-1.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/informacja-prasowa-wyniki-q1-2021.pdf"
     },
     "III 2021": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/11/skonsolidowane-sprawozdanie-finansowe-za-iii-kwartal-2021-r.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/11/podstawowe-dane-finansowe-q3-2021.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/11/informacja-prasowa-wyniki-q3-2021.pdf"
     },
-    "I 2021": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/srodroczne-skrocone-skonsolidowane-sprawozdanie-finansowe-za-i-kw-2021.pdf",
-        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/podstawowe-dane-finansowe-q1-2021-1.xlsx",
-        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/05/informacja-prasowa-wyniki-q1-2021.pdf"
+    "IV 2021": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/11/skonsolidowane-sprawozdanie-finansowe-za-iii-kwartal-2021-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/11/podstawowe-dane-finansowe-q3-2021.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/11/informacja-prasowa-wyniki-q3-2021.pdf"
+    },
+
+    # ===== 2020 =====
+    "I 2020": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-1-kw-2020-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/podstawowe-dane-finansowe_q1-2020.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/press-q1_pl.pdf"
+    },
+    "II 2020": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-1-kw-2020-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/podstawowe-dane-finansowe_q1-2020.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/press-q1_pl.pdf"
     },
     "III 2020": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/11/spr_fin_skons_-q3_2020.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/04/podstawowe-dane-finansowe-q3-2020.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/11/informacja-prasowa-wyniki-za-iii-kwartal-2020-r.pdf"
     },
-    "I 2020": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-1-kw-2020-r.pdf",
-        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/podstawowe-dane-finansowe_q1-2020.xlsx",
-        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/05/press-q1_pl.pdf"
+    "IV 2020": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/11/spr_fin_skons_-q3_2020.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2021/04/podstawowe-dane-finansowe-q3-2020.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2020/11/informacja-prasowa-wyniki-za-iii-kwartal-2020-r.pdf"
     },
-    "III 2019": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2019-r-1.pdf",
-        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/podstawowe-dane-finansowe_q3-2019.xlsx",
-        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/informacja-prasowa-wyniki-q3-2019.pdf"
-    },
+
+    # ===== 2019 =====
     "I 2019": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/05/spr_fin_-q1_2019_signed-1.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/05/podstawowe-dane-finansowe_q1-2019.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/05/grupa-cd-projekt-podsumowuje-poczatek-roku-informacja-prasowa.pdf"
     },
+    "II 2019": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2019-r-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/podstawowe-dane-finansowe_q3-2019.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/informacja-prasowa-wyniki-q3-2019.pdf"
+     },
+    "III 2019": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2019-r-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/podstawowe-dane-finansowe_q3-2019.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/informacja-prasowa-wyniki-q3-2019.pdf"
+    },
+    "IV 2019": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/sprawozdanie-finansowe-grupy-kapitalowej-cd-projekt-za-iii-kwartal-2019-r-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/podstawowe-dane-finansowe_q3-2019.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2019/11/informacja-prasowa-wyniki-q3-2019.pdf"
+    },
+
+    # ===== 2018 =====
+    "I 2018": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/05/spr_fin_-q1_2018-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/05/podstawowe-dane-finansowe_q1-2018.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/05/informacja-prasowa_pl.pdf"
+    },
+    "II 2018": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/srodroczne-skrocone-skonsolidowane-sprawozdanie-finansowe-za-3-kw-2018-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/podstawowe-dane-finansowe_q3-2018-1.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/cd-projekt-podsumowuje-trzeci-kwartal-2018-r-1.pdf"
+   },
     "III 2018": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/srodroczne-skrocone-skonsolidowane-sprawozdanie-finansowe-za-3-kw-2018-r.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/podstawowe-dane-finansowe_q3-2018-1.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/cd-projekt-podsumowuje-trzeci-kwartal-2018-r-1.pdf"
     },
-    "I 2018": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/05/spr_fin_-q1_2018-1.pdf",
-        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/05/podstawowe-dane-finansowe_q1-2018.xlsx",
-        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/05/informacja-prasowa_pl.pdf"
+    "IV 2018": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/srodroczne-skrocone-skonsolidowane-sprawozdanie-finansowe-za-3-kw-2018-r.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/podstawowe-dane-finansowe_q3-2018-1.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2018/11/cd-projekt-podsumowuje-trzeci-kwartal-2018-r-1.pdf"
+    },
+
+    # ===== 2017 =====
+    "I 2017": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/05/2017_qsr1_spraw-2.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/01/podstawowe-dane-finansowe-2017q1.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/05/1q-2017-cd-projekt-informacja-prasowa.pdf"
+    },
+    "II 2017": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/11/spr_fin_skons_-q3_2017-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/01/podstawowe-dane-finansowe_3q2017.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/11/grupa-cd-projekt-informacja-prasowa-3q-2017.pdf"
     },
     "III 2017": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/11/spr_fin_skons_-q3_2017-1.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/01/podstawowe-dane-finansowe_3q2017.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/11/grupa-cd-projekt-informacja-prasowa-3q-2017.pdf"
     },
-    "I 2017": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/05/2017_qsr1_spraw-2.pdf",
-        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/01/podstawowe-dane-finansowe-2017q1.xlsx",
-        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/05/1q-2017-cd-projekt-informacja-prasowa.pdf"
+    "IV 2017": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/11/spr_fin_skons_-q3_2017-1.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/01/podstawowe-dane-finansowe_3q2017.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2017/11/grupa-cd-projekt-informacja-prasowa-3q-2017.pdf"
     },
+
+    # ===== 2016 =====
+    "I 2016": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/05/2016_qsr1_spraw.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/05/podstawowe-dane-firnsowe-w-xls-1-kw-2016-r.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/05/20160512-cd-projekt-publikuje-solidne-wyniki-za-pierwszy-kwartal-2016-roku-informacja-prasowa.pdf"
+    },
+    "II 2016": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/skonsolidowane-sprawozdanie-finansowe_q3-2016.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/podstawowe_dane_finansowe_2016q3.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/wysoka-sprzedazcc87-gry-wiedzmin-3-dziki-gon-i-dodatkow-napecca8dza-wyniki-grupy-cd-projekt-informacja-prasowa.pdf"
+     },
     "III 2016": {
         "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/skonsolidowane-sprawozdanie-finansowe_q3-2016.pdf",
         "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/podstawowe_dane_finansowe_2016q3.xlsx",
         "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/wysoka-sprzedazcc87-gry-wiedzmin-3-dziki-gon-i-dodatkow-napecca8dza-wyniki-grupy-cd-projekt-informacja-prasowa.pdf"
     },
-    "I 2016": {
-        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/05/2016_qsr1_spraw.pdf",
-        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/05/podstawowe-dane-firnsowe-w-xls-1-kw-2016-r.xlsx",
-        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/05/20160512-cd-projekt-publikuje-solidne-wyniki-za-pierwszy-kwartal-2016-roku-informacja-prasowa.pdf"
-    }
+    "IV 2016": {
+        "pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/skonsolidowane-sprawozdanie-finansowe_q3-2016.pdf",
+        "xlsx": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/podstawowe_dane_finansowe_2016q3.xlsx",
+        "press_pdf": "https://www.cdprojekt.com/pl/wp-content/uploads-pl/2016/11/wysoka-sprzedazcc87-gry-wiedzmin-3-dziki-gon-i-dodatkow-napecca8dza-wyniki-grupy-cd-projekt-informacja-prasowa.pdf"
+    },
 }
-
 #FUNKCJE
 
 #Wyświetla okno wyboru folderu i zwraca jego ścieżkę
@@ -348,3 +466,4 @@ def download_file(url: str, default_name: str) -> str:
     except Exception as e:
         print(f"Błąd pobierania {url}: {e}")
         return ""
+
