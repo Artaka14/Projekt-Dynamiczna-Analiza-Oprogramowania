@@ -89,10 +89,15 @@ def showQuarterInfo(selected_quarter, info_frame):
         return
 
     sheet_name = f"{roman_to_quarter[roman]}.{year}"
-    if sheet_name not in wb.sheetnames:
-        tk.Label(info_frame, text=f"Arkusz '{sheet_name}' nie istnieje.", fg="white", bg="#2a2d2e").pack()
-        return
+    sheet_name1 = f"{roman_to_quarter[roman]}{year}"
 
+    if sheet_name not in wb.sheetnames:
+       if sheet_name1 not in wb.sheetnames:
+          tk.Label(info_frame, text=f"Arkusz '{sheet_name}' nie istnieje.", fg="white", bg="#2a2d2e").pack()
+          return
+       else:
+          sheet_name = sheet_name1
+           
     ws = wb[sheet_name]
 
     # Zbieranie danych
@@ -239,6 +244,7 @@ def insert_table_into_frame(frame, extracted):
         tree.insert("", "end", values=row)
 
     tree.pack(fill="both", expand=True)
+
 
 
 
