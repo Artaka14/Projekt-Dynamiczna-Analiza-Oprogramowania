@@ -260,13 +260,6 @@ class Screen3(customtkinter.CTkFrame):
         self.quarter_var = tk.StringVar(value="Wybierz kwartał")
 
         available_quarters = list(CDPdata.QUARTER_REPORTS.keys())
-        for q in list(available_quarters):
-            roman, year = q.split()
-            year = int(year)
-            if roman == "I":
-                available_quarters.append(f"II {year}")
-            elif roman == "III":
-                available_quarters.append(f"IV {year}")
 
         order = ["I", "II", "III", "IV"]  # kolejność rosnąca
         available_quarters.sort(
@@ -352,5 +345,6 @@ class Screen3(customtkinter.CTkFrame):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
