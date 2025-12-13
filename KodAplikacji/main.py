@@ -1,10 +1,14 @@
-﻿import customtkinter
+import customtkinter
 import CDPplot
 import CDPdata
+import CDPQuarter
 import Splash
 from tkcalendar import DateEntry
+import tkinter as tk
+from tkinter import ttk
 from CTkMessagebox import CTkMessagebox
 from datetime import datetime
+
 
 class App(customtkinter.CTk):
     def __init__(self, preloaded_data=None, preloaded_trends=None):
@@ -248,84 +252,104 @@ class Screen3(customtkinter.CTkFrame):
         super().__init__(master)
         self.master = master
 
-        # TYTUŁ
-        title = customtkinter.CTkLabel(
-            self, text="Sprawozdania kwartalne CD Projekt", font=("Arial", 24, "bold")
-        )
+        #TYTUŁ
+        title = customtkinter.CTkLabel(self, text="Sprawozdania kwartalne CD Projekt", font=("Arial", 24, "bold"))
         title.pack(pady=20)
 
-        # WYBÓR KWARTAŁU
-        self.quarter_var = customtkinter.StringVar(value="Wybierz kwartał")
-        self.quarter_dropdown = customtkinter.CTkOptionMenu(
-            self, variable=self.quarter_var, values=list(CDPdata.QUARTER_REPORTS.keys())
-        )
-        self.quarter_dropdown.pack(pady=10)
+        #WYBÓR KWARTAŁU
+        self.quarter_var = tk.StringVar(value="Wybierz kwartał")
 
-        # PRZYCISKI POBIERANIA
+        available_quarters = list(CDPdata.QUARTER_REPORTS.keys())
+        for q in list(available_quarters):
+            roman, year = q.split()
+            year = int(year)
+            if roman == "I":
+                available_quarters.append(f"II {year}")
+            elif roman == "III":
+                available_quarters.append(f"IV {year}")
+
+        order = ["I", "II", "III", "IV"]  # kolejność rosnąca
+        available_quarters.sort(
+             key=lambda x: (
+             int(x.split()[1]),                    # rok
+             order.index(x.split()[0])),           # indeks kwartału
+             reverse=True)                         # od największego do najmniejszego
+
+        self.quarter_combobox = ttk.Combobox(self, textvariable=self.quarter_var, values=available_quarters, state="readonly", width=20)
+        self.quarter_combobox.pack(pady=10)
+        self.quarter_combobox.bind("<<ComboboxSelected>>", lambda e: self.onQuarterSelect(self.quarter_var.get()))
+
+        #SEKCJA INFORMACYJNA
+        self.info_frame = customtkinter.CTkFrame(self, fg_color="transparent")
+        self.info_frame.pack(fill="both", pady=10)
+        self.info_label = customtkinter.CTkLabel(self.info_frame, text="", font=("Arial", 16))
+        self.info_label.pack()
+
+        #PRZYCISKI POBIERANIA
         btn_frame = customtkinter.CTkFrame(self)
         btn_frame.pack(pady=10)
-
-        self.btn_download_pdf = customtkinter.CTkButton(
-            btn_frame, text="Pobierz sprawozdanie finansowe PDF", command=self.download_pdf
-        )
+        self.btn_download_pdf = customtkinter.CTkButton(btn_frame, text="Pobierz PDF", command=self.download_pdf)
         self.btn_download_pdf.pack(side="left", padx=5)
-
-        self.btn_download_xlsx = customtkinter.CTkButton(
-            btn_frame, text="Pobierz podstawowe dane finansowe XLSX", command=self.download_xlsx
-        )
+        self.btn_download_xlsx = customtkinter.CTkButton(btn_frame, text="Pobierz XLSX", command=self.download_xlsx)
         self.btn_download_xlsx.pack(side="left", padx=5)
-
-        self.btn_download_press_pdf = customtkinter.CTkButton(
-            btn_frame, text="Pobierz PDF informacji prasowej", command=self.download_press_pdf
-        )
+        self.btn_download_press_pdf = customtkinter.CTkButton(btn_frame, text="Pobierz PDF info prasowej", command=self.download_press_pdf)
         self.btn_download_press_pdf.pack(side="left", padx=5)
 
-        # DOLNY PASEK
+        #DOLNY PASEK
         nav_frame = customtkinter.CTkFrame(self)
         nav_frame.pack(side="bottom", fill="x", pady=10, padx=10)
-
         btn_left = customtkinter.CTkButton(
             nav_frame, text="Wykres akcji",
             command=lambda: master.show_frame(master.screen1, "Wykres akcji")
         )
         btn_left.pack(side="left", anchor="sw")
-
         btn_right = customtkinter.CTkButton(
             nav_frame, text="Google Trends",
             command=lambda: master.show_frame(master.screen2, "Google Trends")
         )
         btn_right.pack(side="right", anchor="se")
 
-    #  FUNKCJE
+    #Wywołanie po wybraniu kwartału
+    def onQuarterSelect(self, quarter):
+        CDPQuarter.showQuarterInfo(quarter, self.info_label)      
+    
+    def get_xlsx_path(self, quarter):
+        roman, year = quarter.split()
+        return f"dane_finansowe_{roman} {year}.xlsx"
+
+    #Pobieranie plików
     def download_pdf(self):
         quarter = self.quarter_var.get()
         if quarter not in CDPdata.QUARTER_REPORTS:
+            print("Brak raportu dla tego kwartału.")
             return
         url = CDPdata.QUARTER_REPORTS[quarter]["pdf"]
-        filename = f"skonsolidowany_{quarter}.pdf"
-        path = CDPdata.download_file(url, filename)
+        path = CDPdata.download_file(url, f"skonsolidowany_{quarter}.pdf")
         print(f"Pobrano PDF: {path}")
 
     def download_xlsx(self):
         quarter = self.quarter_var.get()
         if quarter not in CDPdata.QUARTER_REPORTS:
+            print("Brak raportu dla tego kwartału.")
             return
         url = CDPdata.QUARTER_REPORTS[quarter]["xlsx"]
-        filename = f"dane_finansowe_{quarter}.xlsx"
-        path = CDPdata.download_file(url, filename)
+        path = CDPdata.download_file(url, f"dane_finansowe_{quarter}.xlsx")
         print(f"Pobrano XLSX: {path}")
 
     def download_press_pdf(self):
         quarter = self.quarter_var.get()
         if quarter not in CDPdata.QUARTER_REPORTS:
+            print("Brak raportu dla tego kwartału.")
             return
         url = CDPdata.QUARTER_REPORTS[quarter]["press_pdf"]
-        filename = f"informacja_prasowa_{quarter}.pdf"
-        path = CDPdata.download_file(url, filename)
-        print(f"Pobrano PDF informacji prasowej: {path}")
+        path = CDPdata.download_file(url, f"informacja_prasowa_{quarter}.pdf")
+        print(f"Pobrano PDF info prasowej: {path}")
 
+    def showError(self, title="", message="", icon="warning"):
+        CTkMessagebox(title=title, message=message, icon=icon)
 
 
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
