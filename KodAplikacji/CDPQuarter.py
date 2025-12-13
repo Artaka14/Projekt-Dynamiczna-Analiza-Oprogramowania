@@ -50,12 +50,14 @@ def showQuarterInfo(selected_quarter, info_frame):
 
     CHOSEN_FIELDS = [
         "Przychody ze sprzedaży",
-        "Zysk (strata) brutto na sprzedaży",
+        "Zysk  (strata) brutto na sprzedaży",
         "Zysk (strata) na działalności operacyjnej",
         "Zysk (strata) przed opodatkowaniem",
         "Zysk (strata) netto",
-        "Zysk (strata) netto przypisana podmiotowi dominującemu"
-        "Koszty sprzedaży"
+        "Zysk (strata) netto przypisana podmiotowi dominującemu",
+        "Koszty sprzedaży",
+        "Koszty ogólnego zarządu",
+        "Suma dochodów całkowitych",
     ]
 
     # Czyścimy zawartość ramki
@@ -95,13 +97,19 @@ def showQuarterInfo(selected_quarter, info_frame):
 
     # Zbieranie danych
     extracted = []
+    found_labels = set()
+
     for row in ws.iter_rows(min_col=2, max_col=4):
         label = row[0].value     
         current = row[1].value   
         previous = row[2].value  
 
-        if label in CHOSEN_FIELDS:
-            extracted.append([label, current, previous])
+        if label in CHOSEN_FIELDS and label not in found_labels:
+           extracted.append([label, current, previous])
+           found_labels.add(label)
+
+           if len(found_labels) == len(CHOSEN_FIELDS):
+              break
 
     if not extracted:
         tk.Label(info_frame, text="Nie znaleziono danych.", fg="white", bg="#2a2d2e").pack()
