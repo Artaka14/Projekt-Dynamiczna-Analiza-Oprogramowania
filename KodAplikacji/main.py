@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter import ttk
 from CTkMessagebox import CTkMessagebox
 from datetime import datetime
-
+import pandas as pd
 
 class App(customtkinter.CTk):
     def __init__(self, preloaded_data=None, preloaded_trends=None):
@@ -352,4 +352,5 @@ class Screen3(customtkinter.CTkFrame):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
