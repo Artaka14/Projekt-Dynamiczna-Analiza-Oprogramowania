@@ -43,6 +43,9 @@
 		\item \verb|CTkMessagebox| – obsługa okien komunikatów,
 		\item \verb|tkcalendar| – wybór zakresu dat,
 		\item \verb|pytrends| – komunikacja z Google Trends.
+		\item \verb|openpyxl| - otwieranie plików XSLX.
+		\item \verb|pandas| - otwieranie i działanie na plikach XSLX.
+		\item \verb|pytest| - biblioteka obsługująca testy
 	\end{itemize}
 	
 	Instalacja pakietów za pomocą pliku req.txt:
@@ -70,6 +73,7 @@
 		\end{itemize}
 		\item możliwość wyboru słowa kluczowego (np. CD Projekt'', Cyberpunk 2077'', ``Wiedźmin'')
 		\item możliwość pobierania raportów finansowych spółki w formacie PDF lub XLSX
+		\item wyświetlanie tabeli zawierającej najważniejsze dane liczbowe na temat wybranego kwartału
 		\item zapisywanie pobranych danych w pamięci podręcznej (cache), aby zmniejszyć liczbę zapytań do API
 	\end{itemize}
 	\section{Zdjęcia aplikacji}
@@ -91,7 +95,7 @@
 		\caption{Ekran do wyświetlania wykresów Google Trends gdzie użytkownik może wybierać ich zakres i słowo kluczowe}
 		\label{fig:app2}
 	\end{figure}
-	
+    \newpage
 	\subsection{Ekran3: Obsługa sprawozdań kwartalnych}
 	\begin{figure}[h]
 		\centering
@@ -142,6 +146,7 @@
 			\item raportu XLSX z wynikami finansowymi,
 			\item informacji prasowej w PDF.
 		\end{itemize}
+		\item wyświetlenie tabeli z najważniejszymi danymi na temat danego kwartału
 	\end{itemize}
 	
 	\subsection{Moduł danych – \texttt{CDPdata}}
@@ -193,6 +198,11 @@
 		\item \textbf{open\_main\_app(self, data)} - zamyka splash screen i otwiera główne okno aplikacji
 	\end{itemize}
 	
+	\subsection*{CDPQuarter}
+	\begin{itemize}
+		\item \textbf{getQuarterTableData(selected\_quarter)} - wyciąga konkretne dane z pliku XLSX sprawozdania kwartalnego dla określonego kwartału i analogicznego kwartału z poprzedniego roku
+	\end{itemize}
+	
 	\subsection*{App}
 	\begin{itemize}
 		\item \textbf{\_\_init\_\_(self, master, preloaded\_data, preloaded\_trends)} - ustawia wysokość szerokość i zawartość głównego okna aplikacji
@@ -219,13 +229,13 @@
 	\subsection*{Screen3}
 	\begin{itemize}
 		\item \textbf{\_\_init\_\_(self, master, preloaded\_data, preloaded\_trends)} - ustawia ramki okna służącego do obsługi sprawozdań kwartalnych
+		\item \textbf{onQuarterButtonClick(self)} - wyświetla tabelę z danymi po kliknięciu przycisku
+		\item \textbf{showQuarterTable(self, extracted, selected\_quarter)} - tworzy tabelę z zebranych danych
 		\item \textbf{download\_pdf(self)} - pobiera plik PDF
 		\item \textbf{download\_xlsx(self)} - pobiera plik XLSX
 		\item \textbf{download\_press\_pdf(self)} - pobiera dane prasowe w formacie PDF
+		\item \textbf{showError(self, title, message, icon)} - pokazuje okienko z błędem
 	\end{itemize}
-	
-	
-	
 	
 	\section{Zagrożenia}
 	
@@ -262,6 +272,72 @@
 	Brak pełnej kontroli nad ścieżką folderu wyboru w Tkinter może prowadzić do zapisu w systemowych katalogach\\
 	\textbf{Rozwiązanie:} domyślny folder w katalogu aplikacji oraz walidacja ścieżki
 	
+\section{Przeprowadzone testy}
+
+\subsection{Testy jednostkowe}
+
+\subsubsection{Cache (test\_cache.py)}
+
+Testy te sprawdzają poprawność działania mechanizmu cache w izolacji od reszty systemu.
+
+\begin{itemize}
+	\item \textbf{test\_save\_and\_load\_cache} -- weryfikuje, że zapisany cache jest poprawnie odczytywany bez modyfikacji danych.
+	\item \textbf{test\_invalid\_json\_moves\_file} -- symuluje uszkodzony plik JSON i sprawdza, czy zostaje on przeniesiony, a cache zwraca pusty słownik.
+	\item \textbf{test\_invalidate\_removes\_entry} -- testuje funkcję unieważniania pojedynczego wpisu cache.
+\end{itemize}
+
+\subsubsection{Konwersja danych (test\_df.py)}
+
+Testy dotyczą funkcji odpowiedzialnej za konwersję danych JSON do obiektu \texttt{DataFrame}.
+
+\begin{itemize}
+	\item \textbf{test\_df\_from\_entry\_valid} -- poprawna konwersja prawidłowego JSON-a do \texttt{DataFrame}.
+	\item \textbf{test\_df\_from\_entry\_invalid\_json} -- obsługa błędnego JSON-a (zwracane \texttt{None}).
+	\item \textbf{test\_df\_from\_entry\_empty} -- zachowanie funkcji przy pustym wejściu.
+\end{itemize}
+
+\subsection{Testy integracyjne}
+
+\subsubsection{Pobieranie danych trendów (test\_gettrends.py)}
+
+Testy integracyjne sprawdzające współpracę warstwy cache z logiką pobierania danych (z użyciem atrap API).
+
+\begin{itemize}
+	\item \textbf{test\_gettrends\_fetches\_and\_saves} -- dane są pobierane z API i zapisywane do cache.
+	\item \textbf{test\_gettrends\_uses\_cache} -- przy istniejącym cache API nie jest wywoływane.
+	\item \textbf{test\_gettrends\_fallback\_on\_error} -- w przypadku błędu API następuje fallback do cache.
+\end{itemize}
+
+\subsection{Testy funkcjonalne (GUI)}
+
+\subsubsection{Ekran trendów (test\_trends\_functionals.py)}
+
+Testy funkcjonalne sprawdzające zachowanie interfejsu użytkownika.
+
+\begin{itemize}
+	\item \textbf{test\_trends\_screen\_shows\_plot} -- sprawdza, czy po akcji użytkownika renderowany jest wykres.
+	\item \textbf{test\_refresh\_forces\_reload} -- weryfikuje, że odświeżenie wymusza ponowne pobranie danych.
+	\item \textbf{test\_trends\_error\_message} -- sprawdza wyświetlenie komunikatu błędu w UI.
+\end{itemize}
+
+\subsection{Testy wydajnościowe}
+
+\subsubsection{Wydajność cache (test\_trends\_performance.py)}
+
+Test mierzy czas dostępu do danych zapisanych lokalnie w cache.
+
+\begin{itemize}
+	\item \textbf{test\_cache\_read\_is\_fast} -- weryfikuje, że odczyt dużego \texttt{DataFrame} z cache trwa krócej niż 50 ms.
+\end{itemize}
+
+    \subsection{Screen poprawności testów}
+    \begin{figure}[H]
+    	\centering
+    	\includegraphics[width=0.7\textwidth]{Obrazy/Ekran4.png}
+    	\caption{Wszystkie testy poza jednym przeszły}
+    	\label{fig:app1}
+    \end{figure}
+
 	\section{Aktualizacje}
 	
 	\subsection*{27.10.2025}
@@ -292,5 +368,15 @@
 	\begin{itemize}
 		\item Poprawienie dokumentacji
 	\end{itemize}
+	\subsection*{01.12.2025}
+	\begin{itemize}
+		\item Dodanie wyświetlania tabeli ze sprawozdania kwartalnego
+		\item Przeprowadzenie testów jednostkowych i integracyjnych
+	\end{itemize}
+	\subsection*{08.12.2025}
+	\begin{itemize}
+		\item Przeprowadzenie testów wydajnościowych i funkcjonalnych
+	\end{itemize}
+	
 	
 \end{document}
