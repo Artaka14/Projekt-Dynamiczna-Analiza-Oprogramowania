@@ -351,14 +351,6 @@ class Screen3(customtkinter.CTkFrame):
 
         tree.pack(padx=20, pady=8)
 
-    #Wywołanie po wybraniu kwartału
-    def onQuarterSelect(self, quarter):
-        CDPQuarter.showQuarterInfo(quarter, self.info_label)      
-    
-    def get_xlsx_path(self, quarter):
-        roman, year = quarter.split()
-        return f"dane_finansowe_{roman} {year}.xlsx"
-
     #Pobieranie plików
     def download_pdf(self):
         quarter = self.quarter_var.get()
@@ -394,6 +386,7 @@ class Screen3(customtkinter.CTkFrame):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
 
