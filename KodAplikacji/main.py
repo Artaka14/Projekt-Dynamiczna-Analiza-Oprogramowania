@@ -248,6 +248,7 @@ class Screen2(customtkinter.CTkFrame):
             
 #Ekran sprawozdań kwartalnych
 class Screen3(customtkinter.CTkFrame):
+    class Screen3(customtkinter.CTkFrame):
     def __init__(self, master, preloaded_data=None, preloaded_trends=None):
         super().__init__(master)
         self.master = master
@@ -270,7 +271,8 @@ class Screen3(customtkinter.CTkFrame):
 
         self.quarter_combobox = ttk.Combobox(self, textvariable=self.quarter_var, values=available_quarters, state="readonly", width=20)
         self.quarter_combobox.pack(pady=10)
-        self.quarter_combobox.bind("<<ComboboxSelected>>", lambda e: self.onQuarterSelect(self.quarter_var.get()))
+        self.show_info_btn = customtkinter.CTkButton(self, text="Pokaż tabele z informacjami",command=self.onQuarterButtonClick)
+        self.show_info_btn.pack(pady=10)
 
         #SEKCJA INFORMACYJNA
         self.info_frame = customtkinter.CTkFrame(self, fg_color="transparent")
@@ -301,6 +303,53 @@ class Screen3(customtkinter.CTkFrame):
             command=lambda: master.show_frame(master.screen2, "Google Trends")
         )
         btn_right.pack(side="right", anchor="se")
+
+    #Wywołanie po wybraniu kwartału
+    def onQuarterButtonClick(self):
+        quarter = self.quarter_var.get()
+        if quarter == "Wybierz kwartał":
+           self.showError("Brak wybranego kwartału", "Przed wyświetleniem tabeli wybierz kwartał")
+           return
+
+        data, error = CDPQuarter.getQuarterTableData(quarter)
+        if error:
+           self.showError(error)
+           return
+
+        self.after_idle(lambda: self.showQuarterTable(data, quarter))
+    
+    def showQuarterTable(self, extracted, selected_quarter):
+        #Czyści poprzedni widget
+        for widget in self.info_frame.winfo_children():
+            widget.destroy()
+
+        style = ttk.Style() 
+        style.theme_use("default") 
+        style.configure("Treeview", background="#2a2d2e", foreground="white", rowheight=25, fieldbackground="#343638", bordercolor="#343638", borderwidth=0) 
+        style.map('Treeview', background=[('selected', '#22559b')]) 
+        style.configure("Treeview.Heading", background="#565b5e", foreground="white", relief="flat") 
+        style.map("Treeview.Heading", background=[('active', '#3484F0')])
+
+        columns = ["Pozycja", selected_quarter, "Poprzedni rok"]
+        tree = ttk.Treeview(self.info_frame, columns=columns, show="headings")
+
+        tree.heading("Pozycja", text="Pozycja", anchor="center")
+        tree.column("Pozycja", anchor="w", width=360)
+
+        tree.heading(selected_quarter, text=selected_quarter, anchor="center")
+        tree.column(selected_quarter, anchor="center", width=120)
+
+        tree.heading("Poprzedni rok", text="Poprzedni rok", anchor="center")
+        tree.column("Poprzedni rok", anchor="center", width=120)
+
+        for label, current, previous in extracted:
+            tree.insert("", "end", values=(
+                 label,
+                 f"{current:,}".replace(",", " ") if current is not None else "-",
+                 f"{previous:,}".replace(",", " ") if previous is not None else "-"
+            ))
+
+        tree.pack(padx=20, pady=8)
 
     #Wywołanie po wybraniu kwartału
     def onQuarterSelect(self, quarter):
@@ -345,6 +394,7 @@ class Screen3(customtkinter.CTkFrame):
 if __name__ == "__main__":
    start = Splash.SplashScreen()
    start.mainloop()
+
 
 
 
