@@ -1,10 +1,8 @@
-﻿import io
+﻿import pandas as pd
 import openpyxl
-from tabulate import tabulate
-import tkinter as tk
-from tkinter import ttk
 
 XLSX_FILES = {
+    "III 2025": "dane_finansowe_III 2025.xlsx",
     "II 2025": "dane_finansowe_II 2025.xlsx",
     "I 2025": "dane_finansowe_I 2025.xlsx",
     "IV 2024": "dane_finansowe_IV 2024.xlsx",
@@ -45,206 +43,74 @@ XLSX_FILES = {
     "I 2016": "dane_finansowe_I 2016.xlsx"
 }
 
-def showQuarterInfo(selected_quarter, info_frame):
+def getQuarterTableData(selected_quarter):
     roman_to_quarter = {"I": "Q1", "II": "Q2", "III": "Q3", "IV": "Q4"}
 
     CHOSEN_FIELDS = [
         "Przychody ze sprzedaży",
         "Zysk  (strata) brutto na sprzedaży",
+        "Zysk/(strata) brutto na sprzedaży",
         "Zysk (strata) na działalności operacyjnej",
+        "Zysk/(strata) na działalności operacyjnej",
         "Zysk (strata) przed opodatkowaniem",
+        "Zysk/(strata) przed opodatkowaniem ",
         "Zysk (strata) netto",
+        "Zysk/(strata) netto",
         "Zysk (strata) netto przypisana podmiotowi dominującemu",
+        "Zysk/(strata) netto przypisana podmiotowi dominującemu",
         "Koszty sprzedaży",
         "Koszty ogólnego zarządu",
+        "Koszty ogólnego zarządu, w tym:"
         "Suma dochodów całkowitych",
     ]
-
-    # Czyścimy zawartość ramki
-    for w in info_frame.winfo_children():
-        w.destroy()
 
     # Walidacja
     try:
         roman, year = selected_quarter.split()
         year = int(year)
     except:
-        tk.Label(info_frame, text="Niepoprawny format kwartału.", fg="white", bg="#2a2d2e").pack()
-        return
+        return None, "Niepoprawny format kwartału"
 
     if roman not in roman_to_quarter:
-        tk.Label(info_frame, text="Nieznany kwartał.", fg="white", bg="#2a2d2e").pack()
-        return
+        return None, "Nieznany kwartał"
 
     path = str(XLSX_FILES.get(selected_quarter))
     if path is None:
-        tk.Label(info_frame, text="Brak pliku XLSX.", fg="white", bg="#2a2d2e").pack()
-        return
+        return None, "Brak pliku XLSX"
 
-    # Wczytanie workbooka
-    try:
-        wb = openpyxl.load_workbook(path, data_only=True)
-    except Exception as e:
-        tk.Label(info_frame, text=f"Błąd wczytywania XLSX:\n{e}", fg="white", bg="#2a2d2e").pack()
-        return
+    sheet_names = [f"{roman_to_quarter[roman]}.{year}", f"{roman_to_quarter[roman]}{year}"]
 
-    sheet_name = f"{roman_to_quarter[roman]}.{year}"
-    sheet_name1 = f"{roman_to_quarter[roman]}{year}"
+    # Próba wczytania konkretnego arkusza
+    for sheet_name in (f"{roman_to_quarter[roman]}.{year}", f"{roman_to_quarter[roman]}{year}"):
+        try:
+            df = pd.read_excel(path, sheet_name=sheet_name, usecols="B:D", engine="openpyxl", nrows=300, dtype={"B": str, "C": float, "D": float})
+            break
+        except Exception as e:
+            df = None
 
-    if sheet_name not in wb.sheetnames:
-       if sheet_name1 not in wb.sheetnames:
-          tk.Label(info_frame, text=f"Arkusz '{sheet_name}' nie istnieje.", fg="white", bg="#2a2d2e").pack()
-          return
-       else:
-          sheet_name = sheet_name1
-           
-    ws = wb[sheet_name]
+    if df is None:
+       return None, "Nie znaleziono arkusza"
 
-    # Zbieranie danych
-    extracted = []
-    found_labels = set()
+    df.columns = ["label", "current", "previous"]
 
-    for row in ws.iter_rows(min_col=2, max_col=4):
-        label = row[0].value     
-        current = row[1].value   
-        previous = row[2].value  
+    # Filtrowanie tylko interesujących pozycji
+    df["label"] = df["label"].fillna("")
+    df["label"] = df["label"].replace({"Koszty ogólnego zarządu, w tym:": "Koszty ogólnego zarządu"})
 
-        if label in CHOSEN_FIELDS and label not in found_labels:
-           extracted.append([label, current, previous])
-           found_labels.add(label)
+    CHOSEN_FIELDS_set = set(CHOSEN_FIELDS)
+    df = df[df["label"].isin(CHOSEN_FIELDS_set)]
 
-           if len(found_labels) == len(CHOSEN_FIELDS):
-              break
+    if df.empty:
+        return None, "Nie znaleziono danych"
 
-    if not extracted:
-        tk.Label(info_frame, text="Nie znaleziono danych.", fg="white", bg="#2a2d2e").pack()
-        return
+    # Zachowanie kolejności CHOSEN_FIELDS
+    df = df.drop_duplicates(subset=["label"])
+    df = df.set_index("label").reindex(CHOSEN_FIELDS).reset_index()
+    df = df.dropna(subset=["current", "previous"], how="all")
+    
+    extracted = list(df[["label", "current", "previous"]].itertuples(index=False, name=None))
 
-    # TWORZENIE TABELI
-
-    style = ttk.Style()
-    style.theme_use("default")
-
-    style.configure("Treeview",
-                    background="#2a2d2e",
-                    foreground="white",
-                    rowheight=25,
-                    fieldbackground="#343638",
-                    bordercolor="#343638",
-                    borderwidth=0)
-    style.map('Treeview', background=[('selected', '#22559b')])
-
-    style.configure("Treeview.Heading",
-                    background="#565b5e",
-                    foreground="white",
-                    relief="flat")
-    style.map("Treeview.Heading",
-              background=[('active', '#3484F0')])
-
-    # Tabela
-    columns = ["Pozycja", f"{selected_quarter}", "Poprzedni rok"]
-    tree = ttk.Treeview(info_frame, columns=columns, show="headings")
-
-    # Pozycja
-    tree.heading("Pozycja", text="Pozycja", anchor="center")
-    tree.column("Pozycja", anchor="w", width=360, stretch=True)
-
-    # Bieżący okres
-    tree.heading(f"{selected_quarter}", text=selected_quarter, anchor="center")
-    tree.column(f"{selected_quarter}", anchor="center", width=120, stretch=False)
-
-    # Poprzedni rok
-    tree.heading("Poprzedni rok", text="Poprzedni rok", anchor="center")
-    tree.column("Poprzedni rok", anchor="center", width=120, stretch=False)
-
-    tree.update_idletasks()
-
-    for label, current, previous in extracted:
-        tree.insert("", "end", values=(
-             label,
-             f"{current:,}".replace(",", " "),
-             f"{previous:,}".replace(",", " ")
-        ))
-
-    tree.pack(fill="both", expand=True)
-
-
-def show_table(parent, df):
-    #STYLE
-    style = ttk.Style()
-    style.theme_use("default")
-
-    style.configure("Treeview",
-                    background="#2a2d2e",
-                    foreground="white",
-                    rowheight=25,
-                    fieldbackground="#343638",
-                    bordercolor="#343638",
-                    borderwidth=0)
-    style.map('Treeview', background=[('selected', '#22559b')])
-
-    style.configure("Treeview.Heading",
-                    background="#565b5e",
-                    foreground="white",
-                    relief="flat")
-    style.map("Treeview.Heading",
-              background=[('active', '#3484F0')])
-
-    #WIDGET
-    tree = ttk.Treeview(parent, columns=list(df.columns), show="headings")
-
-    #Nagłówki
-    for col in df.columns:
-        tree.heading(col, text=col)
-        tree.column(col, anchor="center", width=150)
-
-    #Dane
-    for _, row in df.iterrows():
-        tree.insert("", "end", values=list(row))
-
-    tree.pack(fill="both", expand=True)
-
-    return tree
-
-def insert_table_into_frame(frame, extracted):
-    # Czyszczenie starej zawartości
-    for widget in frame.winfo_children():
-        widget.destroy()
-
-    # Styl
-    style = ttk.Style()
-    style.theme_use("default")
-
-    style.configure("Treeview",
-                    background="#2a2d2e",
-                    foreground="white",
-                    rowheight=25,
-                    fieldbackground="#343638",
-                    bordercolor="#343638",
-                    borderwidth=0)
-    style.map('Treeview', background=[('selected', '#22559b')])
-
-    style.configure("Treeview.Heading",
-                    background="#565b5e",
-                    foreground="white",
-                    relief="flat")
-    style.map("Treeview.Heading",
-              background=[('active', '#3484F0')])
-
-    # Tabela
-    columns = ["Pozycja", "Wartość"]
-    tree = ttk.Treeview(frame, columns=columns, show="headings")
-
-    for col in columns:
-        tree.heading(col, text=col)
-        tree.column(col, anchor="w", width=350)
-
-    # Wstawianie danych
-    for row in extracted:
-        tree.insert("", "end", values=row)
-
-    tree.pack(fill="both", expand=True)
-
+    return extracted, None
 
 
 
