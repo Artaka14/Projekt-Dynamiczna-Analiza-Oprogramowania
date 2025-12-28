@@ -1,0 +1,510 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{lmodern}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+	language=Python,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\color{blue},
+	stringstyle=\color{orange},
+	commentstyle=\color{gray},
+	numbers=left,
+	numberstyle=\tiny,
+	frame=single,
+	breaklines=true,
+	captionpos=b
+}
+\geometry{margin=2.5cm}
+\title{XD PROJEKT – Dynamiczna Analiza Oprogramowania}
+\author{Dariusz Kołodziejczyk, Sebastian Bek, Mikołaj Maliszewski}
+
+\begin{document}
+	\maketitle
+	
+	
+	\section{Testy jednostkowe}
+	
+	\subsection{Izolacja środowiska testowego cache}
+	
+		\begin{lstlisting}[
+		label={lst:isolated_cache_fixture}
+		]
+		@pytest.fixture(autouse=True)
+		def isolated_cache(tmp_path, monkeypatch):
+		fake_cache_dir = tmp_path / "cache"
+		fake_cache_dir.mkdir()
+		
+		monkeypatch.setattr("CDPdata.CACHE_DIR", str(fake_cache_dir))
+		monkeypatch.setattr(
+		"CDPdata.CACHE_FILE",
+		str(fake_cache_dir / "trends_cache.json")
+		)
+		
+		yield 
+	\end{lstlisting}
+	
+	W celu zapewnienia pełnej izolacji testów jednostkowych oraz uniknięcia
+	wpływu testów na rzeczywiste dane aplikacji, zastosowano fixturę testową
+	frameworka \texttt{pytest}. Jej zadaniem jest przygotowanie odrębnego,
+	tymczasowego katalogu cache dla każdego uruchamianego testu.
+	
+	Fixtura automatycznie podmienia ścieżki do katalogu oraz pliku cache
+	wykorzystywane przez aplikację, kierując je do tymczasowego katalogu
+	tworzonego na potrzeby testu. Dzięki temu każdy test działa w pełni
+	niezależnie, a jego wykonanie nie wpływa na inne testy ani na środowisko
+	uruchomieniowe aplikacji.
+	
+	\newpage
+	
+	\subsection{Test zapisu i odczytu danych cache}
+		
+	\begin{lstlisting}[
+		label={lst:test_save_and_load_cache}
+		]
+		def test_save_and_load_cache():
+		data = {"test": {"7d": {"json": "{}", "period": "7d"}}}
+		save_cache(data)
+		
+		loaded = load_cache()
+		assert loaded == data
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja poprawności działania mechanizmu cache
+	w podstawowym scenariuszu użycia, obejmującym zapis danych do cache
+	oraz ich późniejszy odczyt bez utraty lub modyfikacji informacji.
+	
+	\paragraph{Przebieg testu}
+	W ramach testu do mechanizmu cache zapisywany jest przykładowy zestaw
+	danych w postaci struktury JSON. Następnie dane te są odczytywane
+	z cache przy użyciu tego samego klucza identyfikującego wpis.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że dane odczytane z cache będą identyczne z danymi
+	zapisanymi, co potwierdza poprawność działania mechanizmu zapisu
+	i odczytu cache.
+	
+	\subsection{Test obsługi uszkodzonego pliku cache}
+		
+	\begin{lstlisting}[
+		label={lst:test_invalid_json_moves_file}
+		]
+		def test_invalid_json_moves_file(tmp_path, monkeypatch):
+		import importlib
+		mod = importlib.import_module("CDPdata")
+		
+		moved = []
+		def fake_replace(src, dst):
+		moved.append((src, dst))
+		
+		monkeypatch.setattr(mod.os, "replace", fake_replace)
+		
+		with open(mod.CACHE_FILE, "w", encoding="utf-8") as f:
+		f.write("{zlezlezle}")
+		
+		cache = mod.load_cache()
+		assert cache == {}
+		assert len(moved) == 1
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	\paragraph{Cel testu}
+	Celem testu jest sprawdzenie odporności mechanizmu cache na sytuację,
+	w której plik cache zawiera niepoprawne dane w formacie JSON.
+	
+	\paragraph{Przebieg testu}
+	Test symuluje obecność uszkodzonego pliku cache poprzez zapisanie
+	niepoprawnej struktury JSON. Następnie podejmowana jest próba odczytu
+	danych z cache przez aplikację.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekiwanym rezultatem jest przeniesienie uszkodzonego pliku cache
+	oraz zwrócenie pustej struktury danych, co zapobiega przerwaniu
+	działania aplikacji i umożliwia jej dalsze funkcjonowanie.
+	
+	\subsection{Test unieważniania wpisu cache}
+	
+	\begin{lstlisting}[
+		label={lst:test_invalidate_removes_entry}
+		]
+		def test_invalidate_removes_entry():
+		data = {"bitcoin": {"7d": {"json": "{}", "period": "7d"}}}
+		save_cache(data)
+		
+		invalidate_trends_period("bitcoin", "7d")
+		
+		loaded = load_cache()
+		assert loaded == {}
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja poprawności działania mechanizmu
+	unieważniania pojedynczego wpisu w cache.
+	
+	\paragraph{Przebieg testu}
+	W cache zapisywany jest wpis identyfikowany unikalnym kluczem.
+	Następnie wywoływana jest operacja unieważnienia tego wpisu,
+	po czym następuje próba jego ponownego odczytu.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że po unieważnieniu wpis nie będzie dostępny w cache,
+	co potwierdza skuteczność mechanizmu usuwania danych.
+	
+    \subsection{Test poprawnej konwersji danych do obiektu DataFrame}
+		
+	\begin{lstlisting}[
+		label={lst:test_df_from_entry_valid}
+		]
+		def test_df_from_entry_valid():
+		df = pd.DataFrame({"bitcoin": [1, 2, 3]},
+		index=pd.date_range("2024-01-01", periods=3))
+		entry = {"json": df.to_json(orient="split")}
+		
+		out = df_from_entry(entry)
+		
+		assert isinstance(out, pd.DataFrame)
+		assert list(out.columns) == ["bitcoin"]
+		assert len(out) == 3
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja poprawności działania funkcji odpowiedzialnej
+	za konwersję danych zapisanych w formacie JSON do obiektu
+	\texttt{DataFrame} biblioteki \texttt{pandas}.
+	
+	\paragraph{Przebieg testu}
+	W teście tworzony jest przykładowy obiekt \texttt{DataFrame} zawierający
+	dane dla wybranego zasobu, który następnie zapisywany jest do formatu
+	JSON. Tak przygotowane dane przekazywane są do funkcji konwertującej.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że funkcja zwróci poprawny obiekt typu \texttt{DataFrame}
+	z zachowaną strukturą kolumn oraz liczbą rekordów odpowiadającą danym
+	wejściowym.
+	
+	\subsection{Test obsługi niepoprawnych danych wejściowych}
+	
+	\begin{lstlisting}[
+		label={lst:test_df_from_entry_invalid_json}
+		]
+		def test_df_from_entry_invalid_json():
+		entry = {"json": "{kielbasa XD"}
+			assert df_from_entry(entry) is None
+		\end{lstlisting}
+		
+	\paragraph{Cel testu}
+	Celem testu jest sprawdzenie zachowania funkcji konwertującej w sytuacji,
+	gdy przekazane dane wejściowe nie są poprawnym zapisem w formacie JSON.
+	
+	\paragraph{Przebieg testu}
+	Do funkcji przekazywana jest struktura danych zawierająca niepoprawny
+	łańcuch znaków zamiast prawidłowego zapisu JSON.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekiwanym rezultatem testu jest zwrócenie wartości \texttt{None},
+	co sygnalizuje brak możliwości wykonania poprawnej konwersji danych.
+	
+	\subsection{Test obsługi pustych danych wejściowych}
+	
+	\begin{lstlisting}[
+		label={lst:test_df_from_entry_empty}
+		]
+		def test_df_from_entry_empty():
+		assert df_from_entry({}) is None
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja zachowania funkcji konwertującej w przypadku,
+	gdy przekazana struktura danych nie zawiera wymaganych informacji.
+	
+	\paragraph{Przebieg testu}
+	Do funkcji przekazywana jest pusta struktura danych, pozbawiona klucza
+	zawierającego dane w formacie JSON.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że funkcja zwróci wartość \texttt{None}, co potwierdza
+	poprawną obsługę brakujących danych wejściowych.
+	
+	\newpage 
+	
+	\section{Testy integracyjne}
+	
+	\subsection{Test pobrania danych trendów i zapis do cache}
+	
+	\begin{lstlisting}[
+		label={lst:test_gettrends_fetches_and_saves}
+		]
+		def test_gettrends_fetches_and_saves(monkeypatch):
+		df = pd.DataFrame({"bitcoin": [10, 20]}, index=pd.date_range("2024-01-01", periods=2))
+		monkeypatch.setattr("CDPdata.TrendReq", lambda hl, tz: FakePytrends(df))
+		
+		out = getTrendsData("bitcoin", "7d")
+		assert isinstance(out, pd.DataFrame)
+		assert len(out) == 2
+		
+		cache = load_cache()
+		assert "bitcoin" in cache
+		assert "7d" in cache["bitcoin"]
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja poprawności współpracy funkcji
+	pobierającej dane trendów z mechanizmem cache. Test sprawdza, czy
+	dane pobrane z API są poprawnie zapisywane w lokalnym cache.
+	
+	\paragraph{Przebieg testu}
+	Test wykorzystuje atrapę klasy \texttt{FakePytrends}, która zwraca
+	przykładowy \texttt{DataFrame}. Funkcja \texttt{getTrendsData} jest
+	wywoływana dla określonego zasobu i przedziału czasowego. Po wykonaniu
+	operacji sprawdzany jest stan cache.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że funkcja zwróci obiekt \texttt{DataFrame} odpowiadający
+	danym z API oraz że dane zostaną zapisane w cache pod właściwym kluczem.
+	
+	\subsection{Test użycia danych już zapisanych w cache}
+	
+	\begin{lstlisting}[
+		label={lst:test_gettrends_uses_cache}
+		]
+		def test_gettrends_uses_cache(monkeypatch):
+		df = pd.DataFrame({"bitcoin": [10]}, index=pd.date_range("2024-01-01", periods=1))
+		monkeypatch.setattr("CDPdata.TrendReq", lambda hl, tz: FakePytrends(df))
+		_ = getTrendsData("bitcoin", "7d")
+		
+		def fail_pytrends(*a, **kw):
+		raise AssertionError("Nie powinno byc zapytania do pytrends!")
+		
+		monkeypatch.setattr("CDPdata.TrendReq", fail_pytrends)
+		out = getTrendsData("bitcoin", "7d")
+		assert len(out) == 1
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja, czy funkcja pobierająca dane trendów
+	korzysta z istniejącego cache zamiast wykonywać niepotrzebne zapytania
+	do API.
+	
+	\paragraph{Przebieg testu}
+	Do cache zapisywany jest przykładowy zestaw danych. Następnie funkcja
+	\texttt{getTrendsData} jest wywoływana ponownie dla tego samego zasobu
+	i okresu, przy czym symulacja API została zastąpiona funkcją generującą
+	błąd w przypadku wywołania.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że funkcja zwróci dane z cache bez wywoływania API,
+	co potwierdza poprawne wykorzystanie lokalnego mechanizmu pamięci podręcznej.
+	
+	\subsection{Test fallbacku do cache przy błędzie API}
+	
+	\begin{lstlisting}[
+		label={lst:test_gettrends_fallback_on_error}
+		]
+		def test_gettrends_fallback_on_error(monkeypatch):
+		df = pd.DataFrame({"bitcoin": [10]}, index=pd.date_range("2024-01-01", periods=1))
+		monkeypatch.setattr("CDPdata.TrendReq", lambda hl, tz: FakePytrends(df))
+		_ = getTrendsData("bitcoin", "7d")
+		
+		def exploding_pytrends(*a, **kw):
+		raise Exception("API ERROR")
+		
+		monkeypatch.setattr("CDPdata.TrendReq", exploding_pytrends)
+		out = getTrendsData("bitcoin", "7d")
+		assert len(out) == 1
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest sprawdzenie, czy funkcja pobierająca dane trendów
+	poprawnie korzysta z danych zapisanych w cache w przypadku wystąpienia
+	błędu po stronie API.
+	
+	\paragraph{Przebieg testu}
+	Do cache zapisywane są przykładowe dane. Następnie wywołanie funkcji
+	\texttt{getTrendsData} symuluje awarię API poprzez atrapę
+	generującą wyjątek. Funkcja powinna w takim przypadku wykorzystać dane
+	z cache.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że funkcja zwróci dane zapisane w cache, pomimo błędu
+	API, co potwierdza poprawność mechanizmu fallback.
+	
+	\newpage 
+	
+	\section{Testy funkcjonalne (GUI)}
+	
+	\subsection{Test wyświetlania wykresu na ekranie trendów}
+	
+	\begin{lstlisting}[
+		label={lst:test_trends_screen_shows_plot}
+		]
+		def test_trends_screen_shows_plot(monkeypatch):
+		df = pd.DataFrame(
+		{"CD Projekt": [10, 20, 30]},
+		index=pd.date_range("2024-01-01", periods=3)
+		)
+		monkeypatch.setattr("CDPdata.getTrendsData", lambda keyword, period: df)
+		
+		root = ctk.CTk()
+		screen = Screen2(root)
+		
+		screen.showTrendsPlot("7d")
+		
+		widgets = screen.plot_frame.winfo_children()
+		assert len(widgets) > 0
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja, czy po wywołaniu funkcji odpowiedzialnej za wyświetlanie wykresu w interfejsie użytkownika, dane są poprawnie renderowane na ekranie trendów.
+	
+	\paragraph{Przebieg testu}
+	Do funkcji GUI przekazywane są przykładowe dane trendów poprzez atrapę funkcji \texttt{getTrendsData}. Następnie wywoływana jest akcja użytkownika, powodująca wyświetlenie wykresu. Test sprawdza, czy w ramce odpowiedzialnej za wykres (\texttt{plot\_frame}) pojawiły się widgety reprezentujące wykres.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że w ramce \texttt{plot\_frame} pojawią się przynajmniej jeden lub więcej widgetów, co potwierdza poprawne wyświetlenie wykresu.
+	
+	
+	\newpage
+	
+	\subsection{Test wymuszenia ponownego ładowania danych (refresh)}
+	
+	\begin{lstlisting}[
+		label={lst:test_refresh_forces_reload}
+		]
+		def test_refresh_forces_reload(monkeypatch):
+		calls = {"count": 0}
+		
+		def fake_get(keyword, period):
+		calls["count"] += 1
+		return pd.DataFrame(
+		{"CD Projekt": [calls["count"]]},
+		index=pd.date_range("2024-01-01", periods=1)
+		)
+		
+		monkeypatch.setattr("CDPdata.getTrendsData", fake_get)
+		
+		root = ctk.CTk()
+		screen = Screen2(root)
+		
+		calls["count"] = 0
+		
+		screen.showTrendsPlot("7d")
+		first = screen.plot_frame.winfo_children()
+		
+		screen.refreshTrends()
+		second = screen.plot_frame.winfo_children()
+		
+		assert calls["count"] == 2
+		assert first != second
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja, czy funkcja odświeżania danych (\texttt{refreshTrends}) poprawnie wymusza ponowne pobranie danych trendów i aktualizację widoku wykresu.
+	
+	\paragraph{Przebieg testu}
+	Przy pomocy atrap funkcji \texttt{getTrendsData} monitorowana jest liczba wywołań API. Najpierw wyświetlany jest wykres, następnie wywoływana jest funkcja odświeżenia danych. Test porównuje widgety w ramce \texttt{plot\_frame} przed i po odświeżeniu oraz sprawdza, czy liczba wywołań funkcji pobierającej dane wzrosła o jeden.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że liczba wywołań funkcji pobierającej dane wzrośnie do dwóch, a widgety w ramce \texttt{plot\_frame} ulegną zmianie, co potwierdza odświeżenie danych i aktualizację wykresu.
+	
+	\newpage
+	
+	\subsection{Test wyświetlania komunikatu o błędzie}
+	
+	\begin{lstlisting}[
+		label={lst:test_trends_error_message}
+		]
+		def test_trends_error_message(monkeypatch):
+		monkeypatch.setattr(
+		"CDPdata.getTrendsData",
+		lambda keyword, period: None
+		)
+		
+		root = ctk.CTk()
+		screen = Screen2(root)
+		
+		screen.showTrendsPlot("7d")
+		
+		labels = [
+		w for w in screen.plot_frame.winfo_children()
+		if "Nie udalo sie" in getattr(w, "cget", lambda *_: "")("text")
+		]
+		
+		assert len(labels) == 1
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest sprawdzenie, czy w przypadku braku danych funkcja GUI poprawnie wyświetla komunikat błędu dla użytkownika.
+	
+	\paragraph{Przebieg testu}
+	Przy pomocy atrakcji funkcji \texttt{getTrendsData} symulowany jest scenariusz, w którym brak danych (zwracane jest \texttt{None}). Następnie wywoływana jest funkcja wyświetlająca wykres, a test przeszukuje ramkę \texttt{plot\_frame} pod kątem etykiet zawierających komunikat o błędzie.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że w ramce \texttt{plot\_frame} pojawi się etykieta z komunikatem „Nie udało się pobrać danych”, potwierdzając poprawną obsługę błędu w GUI.
+	
+	\newpage 
+	
+	\section{Testy wydajnościowe}
+	
+	\subsection{Test czasu odczytu danych z cache}
+	
+	\begin{lstlisting}[
+		label={lst:test_cache_read_is_fast}
+		]
+		KEYWORD = "CD Projekt"
+		PERIOD = "7d"
+		
+		def test_cache_read_is_fast(tmp_path, monkeypatch):
+		import time
+		
+		# duzy DataFrame
+		df = pd.DataFrame(
+		{"CD Projekt": range(365)},
+		index=pd.date_range("2023-01-01", periods=365)
+		)
+		
+		save_cache({
+			KEYWORD: {
+				PERIOD: {
+					"period": PERIOD,
+					"json": df.to_json(orient="split")
+				}
+			}
+		})
+		
+		# pomiar czasu
+		start = time.perf_counter()
+		result = getTrendsData(KEYWORD, PERIOD)
+		elapsed = time.perf_counter() - start
+		
+		assert result is not None
+		assert len(result) == 365
+		
+		# twardy limit (lokalnie powinno byc < 50 ms)
+		assert elapsed < 0.05
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja wydajności mechanizmu cache przy odczycie dużego obiektu danych. Test sprawdza, czy pobranie danych zapisanych lokalnie jest szybkie i nie powoduje opóźnień w działaniu aplikacji.
+	
+	\paragraph{Przebieg testu}
+	Do cache zapisywany jest przykładowy, duży obiekt typu \texttt{DataFrame} zawierający 365 rekordów. Następnie wywoływana jest funkcja \texttt{getTrendsData} dla tego samego zasobu i przedziału czasowego. Czas wykonania operacji jest mierzony przy użyciu \texttt{time.perf\_counter}.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że funkcja zwróci pełny \texttt{DataFrame} o 365 rekordach, a czas odczytu nie przekroczy 50 ms. Test potwierdza, że mechanizm cache zapewnia szybki dostęp do lokalnie zapisanych danych.
+	
+	\subsection{Screen poprawności testów}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.7\textwidth]{Obrazy/Ekran4.png}
+		\caption{Wszystkie testy poza jednym przeszły}
+		\label{fig:app1}
+	\end{figure}
+	
+\end{document}
