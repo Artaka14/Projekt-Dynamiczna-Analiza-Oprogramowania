@@ -28,6 +28,16 @@
 \begin{document}
 	\maketitle
 	
+	\section{Wprowadzenie}
+	Poniższe testy zostały przeprowadzone w środowisku Visual Studio 2022 na komputerze o specyfikacji
+	
+	\begin{itemize}
+		\item \textbf{Karta graficzna:} NVIDIA GeForce GTX 1060
+		\item \textbf{Procesor:} Intel Core i7-8750H
+		\item \textbf{Pamięć RAM:} 16 GB DDR4
+		\item \textbf{Dysk:} SSD NVMe
+		\item \textbf{System operacyjny:} Windows 10 Home
+	\end{itemize}
 	
 	\section{Testy jednostkowe}
 	
@@ -61,7 +71,7 @@
 	niezależnie, a jego wykonanie nie wpływa na inne testy ani na środowisko
 	uruchomieniowe aplikacji.
 	
-	\newpage
+	
 	
 	\subsection{Test zapisu i odczytu danych cache}
 		
@@ -115,7 +125,6 @@
 	\end{lstlisting}
 	
 	\paragraph{Cel testu}
-	\paragraph{Cel testu}
 	Celem testu jest sprawdzenie odporności mechanizmu cache na sytuację,
 	w której plik cache zawiera niepoprawne dane w formacie JSON.
 	
@@ -156,6 +165,8 @@
 	\paragraph{Efekt oczekiwany}
 	Oczekuje się, że po unieważnieniu wpis nie będzie dostępny w cache,
 	co potwierdza skuteczność mechanizmu usuwania danych.
+	
+	\newpage 
 	
     \subsection{Test poprawnej konwersji danych do obiektu DataFrame}
 		
@@ -211,6 +222,8 @@
 	Oczekiwanym rezultatem testu jest zwrócenie wartości \texttt{None},
 	co sygnalizuje brak możliwości wykonania poprawnej konwersji danych.
 	
+	\newpage 
+	
 	\subsection{Test obsługi pustych danych wejściowych}
 	
 	\begin{lstlisting}[
@@ -232,7 +245,6 @@
 	Oczekuje się, że funkcja zwróci wartość \texttt{None}, co potwierdza
 	poprawną obsługę brakujących danych wejściowych.
 	
-	\newpage 
 	
 	\section{Testy integracyjne}
 	
@@ -301,6 +313,8 @@
 	\paragraph{Efekt oczekiwany}
 	Oczekuje się, że funkcja zwróci dane z cache bez wywoływania API,
 	co potwierdza poprawne wykorzystanie lokalnego mechanizmu pamięci podręcznej.
+	
+	\newpage 
 	
 	\subsection{Test fallbacku do cache przy błędzie API}
 	
@@ -499,7 +513,7 @@
 	\paragraph{Efekt oczekiwany}
 	Oczekuje się, że funkcja zwróci pełny \texttt{DataFrame} o 365 rekordach, a czas odczytu nie przekroczy 50 ms. Test potwierdza, że mechanizm cache zapewnia szybki dostęp do lokalnie zapisanych danych.
 	
-	\subsection{Screen poprawności testów}
+	\section{Screen poprawności testów wraz z }
 	\begin{figure}[H]
 		\centering
 		\includegraphics[width=0.7\textwidth]{Obrazy/Ekran4.png}
@@ -507,4 +521,15 @@
 		\label{fig:app1}
 	\end{figure}
 	
+	\section{Pokrycie linii}
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{|l|c|c|c|}
+			\hline
+			Moduł & Stmts & Miss & Cover \\ \hline
+			CDPdata & 160 & 77  & 52\%   \\ \hline
+			CDPplot & 131 & 100 & 24\%   \\ \hline
+		\end{tabular}
+		\caption{Podsumowanie pokrycia kodu}
+	\end{table}
 \end{document}
