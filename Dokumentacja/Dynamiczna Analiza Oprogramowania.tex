@@ -243,8 +243,7 @@
 	
 	\paragraph{Efekt oczekiwany}
 	Oczekuje się, że funkcja zwróci wartość \texttt{None}, co potwierdza
-	poprawną obsługę brakujących danych wejściowych.
-	
+	poprawną obsługę brakujących danych wejściowych.	
 	
 	\section{Testy integracyjne}
 	
@@ -314,8 +313,6 @@
 	Oczekuje się, że funkcja zwróci dane z cache bez wywoływania API,
 	co potwierdza poprawne wykorzystanie lokalnego mechanizmu pamięci podręcznej.
 	
-	\newpage 
-	
 	\subsection{Test fallbacku do cache przy błędzie API}
 	
 	\begin{lstlisting}[
@@ -348,8 +345,6 @@
 	\paragraph{Efekt oczekiwany}
 	Oczekuje się, że funkcja zwróci dane zapisane w cache, pomimo błędu
 	API, co potwierdza poprawność mechanizmu fallback.
-	
-	\newpage 
 	
 	\section{Testy funkcjonalne (GUI)}
 	
@@ -464,6 +459,189 @@
 	
 	\newpage 
 	
+		\subsection{Test wyświetlania wykresu dla standardowego okresu}
+	
+	\begin{lstlisting}[label={lst:test_showPlot_shows_plot}]
+		def test_showPlot_shows_plot(monkeypatch):
+		root = ctk.CTk()
+		
+		fake_df = pd.DataFrame(
+		{"Close": [10, 12, 11]},
+		index=pd.date_range("2024-01-01", periods=3)
+		)
+		
+		calls = {"get": 0, "plot": 0}
+		
+		monkeypatch.setattr(
+		"CDPdata.getCdpData",
+		lambda period: calls.__setitem__("get", calls["get"] + 1) or fake_df
+		)
+		
+		monkeypatch.setattr(
+		"CDPplot.createCdpPlot",
+		lambda *args, **kwargs: calls.__setitem__("plot", calls["plot"] + 1)
+		)
+		
+		monkeypatch.setattr(
+		"CDPdata.getCurrentPrice",
+		lambda: 123.45
+		)
+		
+		monkeypatch.setattr(
+		"CDPdata.getMinMaxPrice",
+		lambda df: (10, 12)
+		)
+		
+		screen = Screen1(root)
+		screen.showPlot("7d")
+		
+		assert calls["get"] == 1
+		assert calls["plot"] == 1
+		assert screen.price_label_value.cget("text") == "123.45 PLN"
+		assert screen.min_label_value.cget("text") == "10 PLN"
+		assert screen.max_label_value.cget("text") == "12 PLN"
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja, czy metoda \texttt{showPlot} poprawnie pobiera dane, generuje wykres i aktualizuje etykiety GUI dla standardowego okresu (np. 7 dni).
+	
+	\paragraph{Przebieg testu}
+	Do testu użyto fikcyjnych danych w postaci DataFrame. Funkcje pobierające dane i tworzące wykresy zostały podmienione za pomocą \texttt{monkeypatch}, aby śledzić wywołania i kontrolować wyniki. Następnie wywołano \texttt{showPlot("7d")}.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że:
+	\begin{itemize}
+		\item Funkcje pobierające dane i tworzące wykres zostaną wywołane dokładnie raz,
+		\item Etykiety GUI z ceną bieżącą, minimalną i maksymalną będą zawierały poprawne wartości.
+	\end{itemize}
+	
+	\subsection{Test wyświetlania wykresu dla niestandardowego zakresu dat}
+	
+	\begin{lstlisting}[label={lst:test_custom_date_valid}]
+		def test_custom_date_valid(monkeypatch):
+		root = ctk.CTk()
+		
+		fake_df = pd.DataFrame(
+		{"Close": [100, 110]},
+		index=pd.date_range("2024-01-01", periods=2)
+		)
+		
+		calls = {"data": 0, "plot": 0}
+		
+		monkeypatch.setattr(
+		"CDPdata.getCustomCdpData",
+		lambda start, end: calls.__setitem__("data", calls["data"] + 1) or fake_df
+		)
+		
+		monkeypatch.setattr(
+		"CDPplot.createCustomDataCdpPlot",
+		lambda *args, **kwargs: calls.__setitem__("plot", calls["plot"] + 1)
+		)
+		
+		monkeypatch.setattr(
+		"CDPdata.getMinMaxPrice",
+		lambda df: (100, 110)
+		)
+		
+		screen = Screen1(root)
+		
+		screen.start_date_entry.set_date(fake_df.index.min().date())
+		screen.end_date_entry.set_date(fake_df.index.max().date())
+		
+		screen.showCustomDatePlot()
+		
+		assert calls["data"] == 1
+		assert calls["plot"] == 1
+		assert screen.min_label_value.cget("text") == "100 PLN"
+		assert screen.max_label_value.cget("text") == "110 PLN"
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja, że metoda \texttt{showCustomDatePlot} poprawnie działa dla poprawnego, niestandardowego zakresu dat.
+	
+	\paragraph{Przebieg testu}
+	Do testu użyto fikcyjnych danych. Funkcje pobierające dane i tworzące wykres zostały podmienione. Daty start i end zostały ustawione na odpowiadające zakresowi danych. Wywołano \texttt{showCustomDatePlot()}.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że:
+	\begin{itemize}
+		\item Dane i wykres zostaną pobrane i wygenerowane dokładnie raz,
+		\item Etykiety GUI z minimalną i maksymalną ceną będą zawierały poprawne wartości.
+	\end{itemize}
+	
+	
+	\subsection{Test niestandardowego zakresu dat - niepoprawny zakres}
+	
+	\begin{lstlisting}[label={lst:test_custom_date_invalid_range}]
+		def test_custom_date_invalid_range(monkeypatch):
+		root = ctk.CTk()
+		screen = Screen1(root)
+		
+		errors = []
+		
+		monkeypatch.setattr(
+		screen,
+		"showError",
+		lambda title, message, icon="warning": errors.append((title, message))
+		)
+		
+		screen.start_date_entry.set_date(date(2024, 5, 10))
+		screen.end_date_entry.set_date(date(2024, 5, 1))
+		
+		screen.showCustomDatePlot()
+		
+		assert len(errors) == 1
+		assert "Bledny zakres dat" in errors[0][0]
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest sprawdzenie, czy metoda \texttt{showCustomDatePlot} poprawnie reaguje na niepoprawny zakres dat (data startowa późniejsza niż końcowa).
+	
+	\paragraph{Przebieg testu}
+	Podmieniono metodę \texttt{showError}, aby rejestrować komunikaty błędu. Ustawiono datę startową późniejszą niż końcową i wywołano \texttt{showCustomDatePlot()}.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że zostanie wywołana funkcja \texttt{showError} z komunikatem informującym o błędnym zakresie dat.
+	
+	\subsection{Test niestandardowego zakresu dat - data w przyszłości}
+	
+	\begin{lstlisting}[label={lst:test_custom_date_future_date}]
+		def test_custom_date_future_date(monkeypatch):
+		root = ctk.CTk()
+		screen = Screen1(root)
+		
+		errors = []
+		
+		monkeypatch.setattr(
+		screen,
+		"showError",
+		lambda title, message, icon="warning": errors.append((title, message))
+		)
+		
+		tomorrow = date.today() + timedelta(days=1)
+		
+		screen.start_date_entry.set_date(date.today())
+		screen.end_date_entry.set_date(tomorrow)
+		
+		screen.showCustomDatePlot()
+		
+		assert len(errors) == 1
+		assert "przyszlosci" in errors[0][1]
+		
+		root.destroy()
+	\end{lstlisting}
+	
+	\paragraph{Cel testu}
+	Celem testu jest weryfikacja, czy metoda \texttt{showCustomDatePlot} poprawnie reaguje, gdy wybrana jest data w przyszłości.
+	
+	\paragraph{Przebieg testu}
+	Podmieniono metodę \texttt{showError} w celu rejestrowania komunikatów. Ustawiono datę końcową na przyszłą i wywołano \texttt{showCustomDatePlot()}.
+	
+	\paragraph{Efekt oczekiwany}
+	Oczekuje się, że pojawi się komunikat błędu informujący o niemożliwości wyboru daty w przyszłości.
+	
+	\newpage
+	
 	\section{Testy wydajnościowe}
 	
 	\subsection{Test czasu odczytu danych z cache}
@@ -513,7 +691,40 @@
 	\paragraph{Efekt oczekiwany}
 	Oczekuje się, że funkcja zwróci pełny \texttt{DataFrame} o 365 rekordach, a czas odczytu nie przekroczy 50 ms. Test potwierdza, że mechanizm cache zapewnia szybki dostęp do lokalnie zapisanych danych.
 	
-	\section{Screen poprawności testów}
+	\section{Debugging}
+	
+	Aplikacja została przetestowana z wykorzystaniem debuggera w środowisku \texttt{Microsoft Visual Studio}, co pozwoliło na identyfikację i eliminację błędów logicznych oraz nieprawidłowego przetwarzania danych.
+	
+	\subsection{Obsługa danych JSON}
+	
+	Aplikacja wczytuje dane zapisane w formacie JSON do obiektu \texttt{DataFrame} przy użyciu funkcji \texttt{pd.read\_json()}.  
+	
+	Podczas testowania aplikacji z wykorzystaniem debuggera zauważono pojawienie się ostrzeżenia \texttt{FutureWarning} przy wczytywaniu danych
+	.
+	
+	\begin{lstlisting}[language=Python]
+		FutureWarning: Passing literal json to 'read_json' is deprecated and will be removed in a future version. \\
+		df = pd.read_json(entry["json"], orient="split")
+	\end{lstlisting}
+	
+	Problem został wykryty w następujący sposób:
+	\begin{itemize}
+		\item Aplikacja została uruchomiona w trybie debugowania w środowisku \texttt{[nazwa IDE]}.
+		\item Ustawiono breakpoint w miejscu, w którym następuje wczytywanie danych JSON.
+		\item Podczas krokowego wykonywania programu (\texttt{step over}) obserwowano wartość zmiennej \texttt{entry["json"]}.
+		\item Zauważono, że przekazywany jest dosłowny string JSON do funkcji \texttt{pd.read\_json()}, co powoduje ostrzeżenie.
+	\end{itemize}
+	
+	Rozwiązaniem problemu było opakowanie stringa w obiekt \texttt{StringIO}, co zapewnia poprawne wczytanie danych i kompatybilność z przyszłymi wersjami Pandas:
+	
+	\begin{lstlisting}[language=Python]
+		from io import StringIO
+		import pandas as pd
+		
+		df = pd.read_json(StringIO(entry["json"]), orient="split")
+	\end{lstlisting}
+	
+	\section{Screen poprawności testów }
 	\begin{figure}[H]
 		\centering
 		\includegraphics[width=0.7\textwidth]{Obrazy/Ekran4.png}
