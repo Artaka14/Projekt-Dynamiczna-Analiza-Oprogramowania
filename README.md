@@ -20,7 +20,7 @@ Projekt posiada dwie uzupełniające się dokumentacje:
 
 - **Dynamiczna analiza oprogramowania**  
   Obejmuje testy jednostkowe, integracyjne, funkcjonalne (GUI), wydajnościowe oraz analizę stabilności aplikacji.  
-  📄 [`Dynamiczna Analiza Oprogramowania`](./DynamicznaAnalizaOprogramowania.pdf)
+  📄 [`Dynamiczna Analiza Oprogramowania`](./Dokumentacja/Dynamiczna%20Analiza%20Oprogramowania.pdf)
 
 ## 🎯 Cel projektu
 
