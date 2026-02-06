@@ -10,6 +10,18 @@ Aplikacja umożliwia również pobieranie i przegląd podstawowych raportów fin
 
 ---
 
+## 📄 Dokumentacja
+
+Projekt posiada dwie uzupełniające się dokumentacje:
+
+- **Dokumentacja techniczna aplikacji**  
+  Zawiera opis funkcjonalności, architektury, struktury kodu oraz zastosowanych rozwiązań technicznych.  
+  📁 [`Dokumentacja`](./Dokumentacja)
+
+- **Dynamiczna analiza oprogramowania**  
+  Obejmuje testy jednostkowe, integracyjne, funkcjonalne (GUI), wydajnościowe oraz analizę stabilności aplikacji.  
+  📄 [`Dynamiczna Analiza Oprogramowania`](./Dynamiczna%20Analiza%20Oprogramowania.pdf)
+
 ## 🎯 Cel projektu
 
 Projekt został zrealizowany jako połączenie:
