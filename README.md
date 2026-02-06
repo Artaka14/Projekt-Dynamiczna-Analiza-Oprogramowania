@@ -116,7 +116,6 @@ python main.py
 Autorzy projektu:
 
 * Dariusz Kołodziejczyk
-* Sebastian Bek
 * Mikołaj Maliszewski
 
 
